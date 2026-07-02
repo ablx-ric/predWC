@@ -172,10 +172,12 @@ Los resultados reales se obtienen de bracketmundial2026.com (ver `data/actual_kn
 ## Notas técnicas
 
 - `MAX_DATE` se calcula como `hoy - 1 día` — los datos se actualizan solos al ejecutar
-- Accuracy temporal: **58.81%**, log-loss: **0.8761** (Temporal split, 1634 partidos futuros)
-- F1 macro: **0.4351**, MCC: **0.3246**, Top-2 accuracy: **83.11%**, ECE: **0.0106**
+- Accuracy temporal: **63.86%**, log-loss: **0.7963** (Temporal split, ~1638 partidos futuros)
+- F1 macro: **0.5140**, MCC: **0.4162**, Top-2 accuracy: **87.67%**, ECE: **0.0039**
 - El modelo casi no predice empates (0.3% predicho vs 23% real) — ver `evaluate_model.py`
-- Live tracking 16avos: T.Regular **3/4 (75%)**, Clasificación **2/4 (50%)**
+- Live tracking 16avos: T.Regular **6/10 (60%)**, Clasificación **6/10 (60%)**
+- La gráfica de confianza en `show_results.py` incluye una línea horizontal en 50% como umbral
+- `bracket_tracker.py` usa `actual_knockout_results.json` como fallback cuando results.csv de GitHub no tiene el partido (ej: partidos de julio que no están subidos al dataset público)
 - Creado con `uv init --python 3.12`
 - En Manjaro, si Playwright falla: `sudo pacman -S atk at-spi2-atk cups libdrm libxkbcommon libxcomposite libxdamage libxrandr mesa nss pango cairo gtk3`
 - Las features NLP existen para los 32 equipos pero tienen impacto limitado porque no hay datos NLP históricos para entrenar el meta-modelo (ver `analisis_nlp.md`)
