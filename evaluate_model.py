@@ -116,7 +116,8 @@ def load_elo_history():
             continue
         date_int = dt.toordinal()
         row_list = lookup.setdefault(team, [])
-        row_list.append((date_int, row["elo_before"]))
+        elo_after = row["elo_before"] + row["elo_change"]
+        row_list.append((date_int, float(row["elo_before"]), float(elo_after)))
     return lookup
 
 
@@ -124,9 +125,12 @@ def get_historical_elo(team, match_date, elo_lookup, static_elo=None):
     elo_rows = elo_lookup.get(team)
     if elo_rows:
         date_int = match_date.toordinal()
-        idx = bisect.bisect_left(elo_rows, (date_int,))
+        idx = bisect.bisect_right(elo_rows, (date_int, float("inf")))
         if idx > 0:
-            return elo_rows[idx - 1][1]
+            matched_date, elo_before, elo_after = elo_rows[idx - 1]
+            if matched_date == date_int:
+                return elo_before
+            return elo_after
     if static_elo:
         return static_elo.get(team, 1500)
     return 1500
@@ -157,14 +161,12 @@ def compute_rolling_stats(matches, team_col, date, elo_lookup, static_elo=None, 
             opp = row["away_team"]
             gf = row["home_score"]
             ga = row["away_score"]
-            won = gf > ga
-            drawn = gf == ga
         else:
             opp = row["home_team"]
             gf = row["away_score"]
             ga = row["home_score"]
-            won = ga > gf
-            drawn = ga == gf
+        won = gf > ga
+        drawn = gf == ga
 
         opp_elo = get_historical_elo(normalize_team_for_elo(opp), row["date"], elo_lookup, static_elo)
         weight = time_weight * (opp_elo / 2000.0)
@@ -416,7 +418,7 @@ def main():
             "goal_diff_strength": hs["goal_diff_avg"] - as_["goal_diff_avg"],
             "h2h_home_wins": hw, "h2h_away_wins": aw, "h2h_draws": hd,
             "tournament_weight": m["tournament_weight"],
-            "is_neutral": m["neutral"] == "TRUE",
+            "is_neutral": m["neutral"],
         })
         match_dates.append(match_date)
 

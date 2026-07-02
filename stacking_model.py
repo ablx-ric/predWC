@@ -22,7 +22,7 @@ ELO_RANKINGS = "data/elo_rankings.json"
 ELO_HISTORY = "data/elo_history.parquet"
 KNOCKOUT_MATCHES = "data/knockout_matches.json"
 NLP_FEATURES = "data/team_nlp_features.json"
-MAX_DATE = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+MAX_DATE = None  # set in main() based on --max-date or today-1
 
 TOURNAMENT_WEIGHTS = {
     "FIFA World Cup": 5.0,
@@ -106,7 +106,9 @@ def load_elo_history():
             continue
         date_int = dt.toordinal()
         row_list = lookup.setdefault(team, [])
-        row_list.append((date_int, row["elo_before"]))
+        # Store (date_int, elo_before, elo_after) where elo_after = rating after this match
+        elo_after = row["elo_before"] + row["elo_change"]
+        row_list.append((date_int, float(row["elo_before"]), float(elo_after)))
     return lookup
 
 
@@ -114,9 +116,16 @@ def get_historical_elo(team, match_date, elo_lookup, static_elo=None):
     elo_rows = elo_lookup.get(team)
     if elo_rows:
         date_int = match_date.toordinal()
-        idx = bisect.bisect_left(elo_rows, (date_int,))
+        # Use float('inf') so that (date_int, inf) > (date_int, elo_before, elo_after)
+        # This finds the LAST entry at or before the given date.
+        idx = bisect.bisect_right(elo_rows, (date_int, float("inf")))
         if idx > 0:
-            return elo_rows[idx - 1][1]
+            matched_date, elo_before, elo_after = elo_rows[idx - 1]
+            if matched_date == date_int:
+                # Exact match on this date → team played. Return ELO entering the match.
+                return elo_before
+            # No exact match → return ELO after their last match (current rating)
+            return elo_after
     if static_elo:
         return static_elo.get(team, 1500)
     return 1500
@@ -147,14 +156,12 @@ def compute_rolling_stats(matches, team_col, date, elo_lookup, static_elo=None, 
             opp = row["away_team"]
             gf = row["home_score"]
             ga = row["away_score"]
-            won = gf > ga
-            drawn = gf == ga
         else:
             opp = row["home_team"]
             gf = row["away_score"]
             ga = row["home_score"]
-            won = ga > gf
-            drawn = ga == gf
+        won = gf > ga
+        drawn = gf == ga
 
         opp_elo = get_historical_elo(normalize_team_for_elo(opp), row["date"], elo_lookup, static_elo)
         weight = time_weight * (opp_elo / 2000.0)
@@ -195,9 +202,32 @@ def load_nlp_data():
     return data
 
 
+HOST_NATIONS = {"Mexico", "United States", "Canada"}
+
+
 def build_features_for_match(match, matches_df, match_date, elo_lookup, static_elo=None, nlp_data=None):
-    home = normalize_team_name(match["local"])
-    away = normalize_team_name(match["visitante"])
+    local = normalize_team_name(match["local"])
+    visitante = normalize_team_name(match["visitante"])
+
+    # Host nations playing at home get home advantage
+    # unless the match is explicitly marked as neutral (e.g., Canada's 16avos en USA)
+    if match.get("neutral", False):
+        home = local
+        away = visitante
+        is_neutral = True
+        swapped = False
+    else:
+        host_local = local in HOST_NATIONS
+        host_visitante = visitante in HOST_NATIONS
+        if host_visitante and not host_local:
+            home = visitante
+            away = local
+            swapped = True
+        else:
+            home = local
+            away = visitante
+            swapped = False
+        is_neutral = not (host_local or host_visitante)
 
     date = datetime.strptime(MAX_DATE, "%Y-%m-%d")
     date_d = date.date()
@@ -243,7 +273,7 @@ def build_features_for_match(match, matches_df, match_date, elo_lookup, static_e
         "goal_diff_strength": hs["goal_diff_avg"] - as_["goal_diff_avg"],
         "h2h_home_wins": hw, "h2h_away_wins": aw, "h2h_draws": hd,
         "tournament_weight": 5.0,
-        "is_neutral": True,
+        "is_neutral": is_neutral,
     }
 
     if nlp_data and NLP_FEATURE_COLS:
@@ -261,7 +291,7 @@ def build_features_for_match(match, matches_df, match_date, elo_lookup, static_e
         for k in NLP_FEATURE_COLS:
             fv[k] = 0.0
 
-    return fv
+    return fv, home, away, swapped
 
 
 def predict_poisson_scores(home_elo, away_elo, overall_avg, n_sim=50000, seed=42):
@@ -288,8 +318,14 @@ def predict_poisson_scores(home_elo, away_elo, overall_avg, n_sim=50000, seed=42
 def main():
     parser = argparse.ArgumentParser(description="Stacking Model for WC 2026 Predictions")
     parser.add_argument("--nlp", action="store_true", help="Include NLP features (news + YouTube sentiment)")
+    parser.add_argument("--max-date", type=str, default=None,
+                        help="Limitar datos de entrenamiento hasta esta fecha (YYYY-MM-DD). "
+                             "Default: ayer. Ej: --max-date 2026-06-27 para excluir 16avos")
     args = parser.parse_args()
     use_nlp = args.nlp
+
+    global MAX_DATE
+    MAX_DATE = args.max_date if args.max_date else (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     title = "STACKING MODEL + NLP" if use_nlp else "STACKING MODEL"
     print("=" * 60)
@@ -401,7 +437,7 @@ def main():
             "goal_diff_strength": hs["goal_diff_avg"] - as_["goal_diff_avg"],
             "h2h_home_wins": hw, "h2h_away_wins": aw, "h2h_draws": hd,
             "tournament_weight": m["tournament_weight"],
-            "is_neutral": m["neutral"] == "TRUE",
+            "is_neutral": m["neutral"],
         })
         match_dates.append(match_date)
 
@@ -478,7 +514,7 @@ def main():
     predictions_rows = []
 
     for i, match in enumerate(matches, 1):
-        fv = build_features_for_match(match, df, MAX_DATE, elo_lookup, static_elo, nlp_data)
+        fv, home_team, away_team, swapped = build_features_for_match(match, df, MAX_DATE, elo_lookup, static_elo, nlp_data)
         fv_df = pl.DataFrame([fv])
         fv_base = scaler.transform(fv_df.select(BASE_FEATURE_COLS).to_numpy())
 
@@ -492,12 +528,12 @@ def main():
             pc_str_h = "  ".join(f"PC{j+1}={fv.get(f'home_news_pc{j+1}',0):+.2f}" for j in range(min(n_pc, 3)))
             pc_str_a = "  ".join(f"PC{j+1}={fv.get(f'away_news_pc{j+1}',0):+.2f}" for j in range(min(n_pc, 3)))
             nlp_str = (
-                f"\n   NLP: {match['local']}  {pc_str_h}  ...  YT={fv.get('home_yt_sent',0):+.3f}"
-                f"\n        {match['visitante']}  {pc_str_a}  ...  YT={fv.get('away_yt_sent',0):+.3f}"
+                f"\n   NLP: {home_team}  {pc_str_h}  ...  YT={fv.get('home_yt_sent',0):+.3f}"
+                f"\n        {away_team}  {pc_str_a}  ...  YT={fv.get('away_yt_sent',0):+.3f}"
             )
 
         print(f"\n   {'\u2500' * 60}")
-        print(f"   Match {i:02d}: {match['local']} vs {match['visitante']}")
+        print(f"   Match {i:02d}: {home_team} vs {away_team}")
         print(f"   {'\u2500' * 60}")
         if nlp_str:
             print(nlp_str)
@@ -535,15 +571,32 @@ def main():
         away_adv = final_proba[2] + final_proba[1] * 0.5
         total_adv = local_adv + away_adv
         print(f"   {'\u2500' * 60}")
-        print(f"   AVANCE    | {match['local']}: {local_adv / total_adv * 100:.1f}%  |  {match['visitante']}: {away_adv / total_adv * 100:.1f}%")
+        print(f"   AVANCE    | {home_team}: {local_adv / total_adv * 100:.1f}%  |  {away_team}: {away_adv / total_adv * 100:.1f}%")
+
+        # Store CSV in bracket order (match['local'] first) regardless of feature swap
+        # When swapped: feature home = match['visitante'] (host), feature away = match['local']
+        if swapped:
+            csv_local = match["local"]
+            csv_away = match["visitante"]
+            csv_local_w = away_w      # feature away = match['local']'s roll stats
+            csv_away_w = local_w      # feature home = match['visitante']'s roll stats
+            csv_local_adv = away_adv / total_adv * 100
+            csv_away_adv = local_adv / total_adv * 100
+        else:
+            csv_local = match["local"]
+            csv_away = match["visitante"]
+            csv_local_w = local_w
+            csv_away_w = away_w
+            csv_local_adv = local_adv / total_adv * 100
+            csv_away_adv = away_adv / total_adv * 100
 
         predictions_rows.append({
-            "match": f"{match['local']} vs {match['visitante']}",
-            "local_win_pct": round(local_w, 1),
+            "match": f"{csv_local} vs {csv_away}",
+            "local_win_pct": round(csv_local_w, 1),
             "draw_pct": round(draw_p, 1),
-            "away_win_pct": round(away_w, 1),
-            "local_advance_pct": round(local_adv / total_adv * 100, 1),
-            "away_advance_pct": round(away_adv / total_adv * 100, 1),
+            "away_win_pct": round(csv_away_w, 1),
+            "local_advance_pct": round(csv_local_adv, 1),
+            "away_advance_pct": round(csv_away_adv, 1),
             "expected_goals_local": round(lambda_home, 2),
             "expected_goals_away": round(lambda_away, 2),
             "most_likely_score": poisson_scores[0][0] if poisson_scores else "",

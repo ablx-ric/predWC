@@ -100,6 +100,7 @@ def plot_confidence_gauge(df):
     ax.set_xticklabels(matches_short, fontsize=7)
     ax.set_ylabel("Confianza (%)")
     ax.set_title("Confianza del modelo por partido")
+    ax.axhline(y=50, color="#e74c3c", linestyle="--", linewidth=0.8, alpha=0.5)
     ax.set_ylim(0, 105)
     for bar, v in zip(bars, df["max_prob"]):
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,

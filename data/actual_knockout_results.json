@@ -46,5 +46,77 @@
     "away_penalties": null,
     "advancing_team": "Brazil",
     "notes": "Brasil 2-1 Japón"
+  },
+  {
+    "local": "France",
+    "away": "Sweden",
+    "local_goals_regular": 3,
+    "away_goals_regular": 0,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "France",
+    "notes": "Francia 3-0 Suecia"
+  },
+  {
+    "local": "Ivory Coast",
+    "away": "Norway",
+    "local_goals_regular": 1,
+    "away_goals_regular": 2,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Norway",
+    "notes": "Costa de Marfil 1-2 Noruega"
+  },
+  {
+    "local": "Mexico",
+    "away": "Ecuador",
+    "local_goals_regular": 2,
+    "away_goals_regular": 0,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Mexico",
+    "notes": "México 2-0 Ecuador"
+  },
+  {
+    "local": "England",
+    "away": "Congo DR",
+    "local_goals_regular": 2,
+    "away_goals_regular": 1,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "England",
+    "notes": "Inglaterra 2-1 RD Congo"
+  },
+  {
+    "local": "United States",
+    "away": "Bosnia-Herzegovina",
+    "local_goals_regular": 2,
+    "away_goals_regular": 0,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "United States",
+    "notes": "Estados Unidos 2-0 Bosnia y Herzegovina"
+  },
+  {
+    "local": "Belgium",
+    "away": "Senegal",
+    "local_goals_regular": 3,
+    "away_goals_regular": 2,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Belgium",
+    "notes": "Bélgica 3-2 Senegal"
   }
 ]

@@ -9,7 +9,8 @@
   },
   {
     "local": "South Africa",
-    "visitante": "Canada"
+    "visitante": "Canada",
+    "neutral": true
   },
   {
     "local": "Netherlands",

@@ -280,6 +280,7 @@ def plot_confidence_vs_outcome(rows):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1.8,
                     f"{v:.0f}%", ha="center", fontsize=9, fontweight="bold", color="#2c3e50")
 
+        ax.axhline(y=50, color="#e74c3c", linestyle="--", linewidth=0.8, alpha=0.5)
         ax.set_ylim(0, 110)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.tick_params(axis="y", labelsize=7)
@@ -509,13 +510,23 @@ def main():
         local = match["local"]
         away = match["visitante"]
 
-        pred_row = pred_df.filter(pl.col("match") == f"{local} vs {away}")
+        pred_row = pred_df.filter(
+            (pl.col("match") == f"{local} vs {away}") |
+            (pl.col("match") == f"{away} vs {local}")
+        )
         if pred_row.height == 0:
             continue
         pred = pred_row.row(0, named=True)
 
         actual = find_actual_match(actual_df, local, away)
         advance = find_advance_info(actual_ko, local, away)
+
+        # Fallback: use JSON scores when results.csv doesn't have the match yet
+        if actual is None and advance is not None:
+            actual = {
+                "local_score": advance["local_goals_regular"],
+                "away_score": advance["away_goals_regular"],
+            }
 
         is_played = actual is not None
         is_played_av = advance is not None
@@ -550,6 +561,18 @@ def main():
             if advance["local_penalties"] is not None:
                 pen_str = f" ({advance['local_penalties']}-{advance['away_penalties']} pen)"
             actual_advance_str = f"{actual_advancing}{pen_str}"
+        elif is_played and actual["local_score"] != actual["away_score"]:
+            # No JSON entry but clear 90-min winner → auto-detect advance
+            if actual["local_score"] > actual["away_score"]:
+                actual_advancing = local
+            else:
+                actual_advancing = away
+            av_correct_flag = predicted_advance_name == actual_advancing
+            if av_correct_flag:
+                av_correct += 1
+            av_played += 1
+            av_status = "correct" if av_correct_flag else "incorrect"
+            actual_advance_str = actual_advancing
         else:
             av_correct_flag = None
             av_status = "pending"

@@ -1,17 +1,17 @@
 match,local_win_pct,draw_pct,away_win_pct,local_advance_pct,away_advance_pct,expected_goals_local,expected_goals_away,most_likely_score,most_likely_score_pct
-Germany vs Paraguay,44.1,34.6,21.3,61.4,38.6,1.75,0.98,1-1,11.4
-France vs Sweden,72.5,19.0,8.5,82.0,18.0,2.46,0.27,2-0,19.7
-South Africa vs Canada,17.9,24.6,57.5,30.2,69.8,0.74,1.99,0-2,12.9
-Netherlands vs Morocco,33.1,34.9,32.0,50.5,49.5,1.76,0.97,1-0,11.3
-Portugal vs Croatia,56.4,25.4,18.2,69.1,30.9,1.69,1.04,1-1,11.5
-Spain vs Austria,57.6,27.1,15.3,71.2,28.8,2.33,0.4,2-0,17.6
-United States vs Bosnia-Herzegovina,48.8,30.9,20.3,64.3,35.7,1.95,0.78,1-0,12.7
-Belgium vs Senegal,43.5,30.5,26.1,58.7,41.3,1.53,1.2,1-1,11.9
-Brazil vs Japan,69.4,20.0,10.6,79.4,20.6,1.74,0.99,1-0,11.5
-Ivory Coast vs Norway,22.1,23.6,54.3,33.9,66.1,0.73,2.0,0-1,13.1
-Mexico vs Ecuador,42.8,29.5,27.7,57.6,42.4,1.4,1.33,1-1,12.1
-England vs Congo DR,64.3,24.5,11.2,76.6,23.4,2.37,0.36,2-0,18.0
-Argentina vs Cape Verde,57.8,28.6,13.6,72.1,27.9,2.6,0.13,2-0,22.5
-Australia vs Egypt,53.1,26.0,20.9,66.1,33.9,1.59,1.14,1-1,11.7
-Switzerland vs Algeria,54.2,26.1,19.8,67.2,32.8,1.85,0.88,1-0,12.1
-Colombia vs Ghana,76.2,16.9,6.9,84.6,15.4,2.52,0.21,2-0,20.9
+Germany vs Paraguay,64.4,25.0,10.6,76.9,23.1,1.88,0.85,1-0,12.2
+France vs Sweden,76.0,18.4,5.5,85.3,14.7,2.52,0.21,2-0,20.9
+South Africa vs Canada,19.0,30.0,51.0,34.0,66.0,1.0,1.73,1-1,11.3
+Netherlands vs Morocco,42.1,34.6,23.3,59.4,40.6,1.75,0.98,1-0,11.3
+Portugal vs Croatia,46.5,33.5,20.0,63.3,36.7,1.69,1.04,1-1,11.3
+Spain vs Austria,76.5,18.0,5.5,85.5,14.5,2.35,0.38,2-0,18.0
+United States vs Bosnia-Herzegovina,44.7,36.3,19.0,62.8,37.2,1.73,1.0,1-0,11.3
+Belgium vs Senegal,27.8,34.9,37.3,45.3,54.7,1.49,1.24,1-1,12.0
+Brazil vs Japan,70.6,21.5,7.9,81.4,18.6,1.88,0.85,1-0,12.2
+Ivory Coast vs Norway,8.1,17.6,74.3,16.9,83.1,0.68,2.05,0-2,13.6
+Mexico vs Ecuador,29.9,35.8,34.4,47.7,52.3,1.32,1.41,1-1,12.1
+England vs Congo DR,73.8,19.9,6.4,83.7,16.3,2.37,0.36,2-0,18.1
+Argentina vs Cape Verde,76.5,17.9,5.6,85.5,14.5,2.61,0.12,2-0,22.5
+Australia vs Egypt,42.3,36.7,21.0,60.7,39.3,1.59,1.14,1-1,11.6
+Switzerland vs Algeria,39.3,35.0,25.7,56.8,43.2,1.75,0.98,1-0,11.3
+Colombia vs Ghana,81.9,14.3,3.8,89.0,11.0,2.52,0.21,2-0,20.9
