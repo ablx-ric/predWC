@@ -166,7 +166,9 @@ def compute_rolling_stats(matches, team_col, date, elo_lookup, static_elo=None, 
         drawn = gf == ga
 
         opp_elo = get_historical_elo(normalize_team_for_elo(opp), row["date"], elo_lookup, static_elo)
-        weight = time_weight * (opp_elo / 2000.0)
+        # WC 2026 boost: give 3x weight to matches from the current tournament
+        is_wc2026 = row.get("tournament") == "FIFA World Cup" and row["date"].year == 2026
+        weight = time_weight * (opp_elo / 2000.0) * (3.0 if is_wc2026 else 1.0)
         total_weight += weight
         w_gf += weight * gf
         w_ga += weight * ga
@@ -512,8 +514,10 @@ def main():
     models = {
         "rf": RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42,
                                      class_weight="balanced", n_jobs=-1),
-        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05,
-                                 random_state=42, eval_metric="mlogloss"),
+        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=6, learning_rate=0.03,
+                                 random_state=42, eval_metric="mlogloss",
+                                 subsample=0.8, colsample_bytree=0.8,
+                                 reg_lambda=1.0, reg_alpha=0.1),
         "mlp": MLPClassifier(hidden_layer_sizes=(15,), activation="relu",
                               solver="adam", max_iter=5000, random_state=42,
                               early_stopping=True, validation_fraction=0.1,

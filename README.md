@@ -172,11 +172,12 @@ Los resultados reales se obtienen de bracketmundial2026.com (ver `data/actual_kn
 ## Notas técnicas
 
 - `MAX_DATE` se calcula como `hoy - 1 día` — los datos se actualizan solos al ejecutar
-- Accuracy temporal: **61.44%**, log-loss: **0.8235** (Temporal split, ~1639 partidos futuros)
-- F1 macro: **0.5847**, MCC: **0.4059**, Top-2 accuracy: **86.94%**, ECE: **0.0254**
-- Modelo: RF + XGBoost + MLP (red neuronal) → LogisticRegression con `class_weight='balanced'`
-- Predicción de goles con **Dixon-Coles** (corrección τ para undervaluación de empates bajos, ρ=-0.13) en vez de Poisson simple
-- Distribución predicha: empates 27.2% (real 23.2%)
+- Accuracy temporal: **61.77%**, log-loss: **0.8152** (Temporal split, ~1640 partidos futuros)
+- F1 macro: **0.5922**, MCC: **0.4147**, Top-2 accuracy: **~87%**, ECE: **~0.025**
+- Modelo: RF + XGBoost (regularizado: subsample=0.8, max_depth=6) + MLP → LogisticRegression con `class_weight='balanced'`
+- Predicción de goles con **Dixon-Coles** (corrección τ, ρ=-0.13) 
+- **WC2026 boost** (×3): partidos del Mundial actual pesan el triple en el rolling window (10 partidos)
+- Distribución predicha: empates ~27% (real 23.2%)
 - Live tracking 16avos: T.Regular **6/10 (60%)**, Clasificación **6/10 (60%)**
 - La gráfica de confianza en `show_results.py` incluye una línea horizontal en 50% como umbral
 - `bracket_tracker.py` usa `actual_knockout_results.json` como fallback cuando results.csv de GitHub no tiene el partido (ej: partidos de julio que no están subidos al dataset público)
