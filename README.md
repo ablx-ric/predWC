@@ -172,8 +172,8 @@ Los resultados reales se obtienen de bracketmundial2026.com (ver `data/actual_kn
 ## Notas técnicas
 
 - `MAX_DATE` se calcula como `hoy - 1 día` — los datos se actualizan solos al ejecutar
-- Accuracy temporal: **61.77%**, log-loss: **0.8152** (Temporal split, ~1640 partidos futuros)
-- F1 macro: **0.5922**, MCC: **0.4147**, Top-2 accuracy: **~87%**, ECE: **~0.025**
+- Accuracy temporal: **61.89%**, log-loss: **0.8185** (Temporal split, ~1640 partidos futuros)
+- F1 macro: **0.5911**, MCC: **0.4147**, Top-2 accuracy: **~87%**, ECE: **~0.025**
 - Modelo: RF + XGBoost (regularizado: subsample=0.8, max_depth=6) + MLP → LogisticRegression con `class_weight='balanced'`
 - Predicción de goles con **Dixon-Coles** (corrección τ, ρ=-0.13) 
 - **WC2026 boost** (×3): partidos del Mundial actual pesan el triple en el rolling window (10 partidos)

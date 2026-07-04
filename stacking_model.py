@@ -518,10 +518,10 @@ def main():
                                  random_state=42, eval_metric="mlogloss",
                                  subsample=0.8, colsample_bytree=0.8,
                                  reg_lambda=1.0, reg_alpha=0.1),
-        "mlp": MLPClassifier(hidden_layer_sizes=(15,), activation="relu",
+        "mlp": MLPClassifier(hidden_layer_sizes=(25, 12), activation="relu",
                               solver="adam", max_iter=5000, random_state=42,
-                              early_stopping=True, validation_fraction=0.1,
-                              alpha=0.001),
+                              early_stopping=True, validation_fraction=0.15,
+                              alpha=0.003),
     }
 
     print("   Training base models...")
