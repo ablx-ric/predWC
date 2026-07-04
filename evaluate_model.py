@@ -23,6 +23,7 @@ from sklearn.metrics import (
 )
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.utils.class_weight import compute_class_weight
 
 warnings.filterwarnings("ignore")
 
@@ -445,20 +446,27 @@ def main():
     X_tr, X_val = X[train_idx], X[val_idx]
     y_tr, y_val = y[train_idx], y[val_idx]
 
+    classes = np.array([0, 1, 2])
+    tr_weights = compute_class_weight("balanced", classes=classes, y=y_tr)
+    sw_tr = tr_weights[y_tr]
+
     scaler = StandardScaler()
     X_tr_scaled = scaler.fit_transform(X_tr)
     X_val_scaled = scaler.transform(X_val)
 
     models = {
-        "rf": RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42, n_jobs=-1),
-        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, random_state=42,
-                                  eval_metric="mlogloss"),
-        "svm": SVC(kernel="rbf", probability=True, random_state=42),
+        "rf": RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42,
+                                     class_weight="balanced", n_jobs=-1),
+        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05,
+                                 random_state=42, eval_metric="mlogloss"),
+        "svm": SVC(kernel="rbf", probability=True, random_state=42,
+                   class_weight="balanced"),
     }
 
     print("\n[3] Training base models...")
-    for name, model in models.items():
-        model.fit(X_tr_scaled, y_tr)
+    models["rf"].fit(X_tr_scaled, y_tr)
+    models["xgb"].fit(X_tr_scaled, y_tr, sample_weight=sw_tr)
+    models["svm"].fit(X_tr_scaled, y_tr)
 
     meta_val = np.zeros((len(y_val), 9))
     offset = 0
@@ -467,7 +475,8 @@ def main():
         offset += 3
 
     # Meta-model trained on VAL predictions (out-of-sample)
-    meta = LogisticRegression(solver="lbfgs", max_iter=1000, C=0.1, random_state=42)
+    meta = LogisticRegression(solver="lbfgs", max_iter=1000, C=0.1,
+                               class_weight="balanced", random_state=42)
     meta.fit(meta_val, y_val)
 
     val_probs = meta.predict_proba(meta_val)

@@ -172,9 +172,9 @@ Los resultados reales se obtienen de bracketmundial2026.com (ver `data/actual_kn
 ## Notas técnicas
 
 - `MAX_DATE` se calcula como `hoy - 1 día` — los datos se actualizan solos al ejecutar
-- Accuracy temporal: **63.86%**, log-loss: **0.7963** (Temporal split, ~1638 partidos futuros)
-- F1 macro: **0.5140**, MCC: **0.4162**, Top-2 accuracy: **87.67%**, ECE: **0.0039**
-- El modelo casi no predice empates (0.3% predicho vs 23% real) — ver `evaluate_model.py`
+- Accuracy temporal: **61.62%**, log-loss: **0.8272** (Temporal split, ~1639 partidos futuros)
+- F1 macro: **0.5820**, MCC: **0.4053**, Top-2 accuracy: **86.88%**, ECE: **0.0283**
+- El modelo usa `class_weight='balanced'` en RF, SVM, meta-LR y `sample_weight` en XGB para mejorar la predicción de empates (distribución predicha: 26.4% vs real 23.2%)
 - Live tracking 16avos: T.Regular **6/10 (60%)**, Clasificación **6/10 (60%)**
 - La gráfica de confianza en `show_results.py` incluye una línea horizontal en 50% como umbral
 - `bracket_tracker.py` usa `actual_knockout_results.json` como fallback cuando results.csv de GitHub no tiene el partido (ej: partidos de julio que no están subidos al dataset público)

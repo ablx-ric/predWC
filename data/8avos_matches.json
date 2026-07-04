@@ -1,0 +1,42 @@
+[
+  {
+    "local": "Paraguay",
+    "visitante": "France",
+    "neutral": true
+  },
+  {
+    "local": "Canada",
+    "visitante": "Morocco",
+    "neutral": true
+  },
+  {
+    "local": "Portugal",
+    "visitante": "Spain",
+    "neutral": true
+  },
+  {
+    "local": "United States",
+    "visitante": "Belgium",
+    "neutral": false
+  },
+  {
+    "local": "Brazil",
+    "visitante": "Norway",
+    "neutral": true
+  },
+  {
+    "local": "Mexico",
+    "visitante": "England",
+    "neutral": false
+  },
+  {
+    "local": "Argentina",
+    "visitante": "Egypt",
+    "neutral": true
+  },
+  {
+    "local": "Switzerland",
+    "visitante": "Colombia",
+    "neutral": true
+  }
+]

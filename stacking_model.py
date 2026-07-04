@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.utils.class_weight import compute_class_weight
 
 warnings.filterwarnings("ignore")
 
@@ -321,15 +322,18 @@ def main():
     parser.add_argument("--max-date", type=str, default=None,
                         help="Limitar datos de entrenamiento hasta esta fecha (YYYY-MM-DD). "
                              "Default: ayer. Ej: --max-date 2026-06-27 para excluir 16avos")
+    parser.add_argument("--8avos", action="store_true", help="Predecir octavos de final (usa data/8avos_matches.json)")
     args = parser.parse_args()
     use_nlp = args.nlp
+    es_8avos = getattr(args, "8avos", False)
 
     global MAX_DATE
     MAX_DATE = args.max_date if args.max_date else (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
+    ronda = "8avos" if es_8avos else "16avos"
     title = "STACKING MODEL + NLP" if use_nlp else "STACKING MODEL"
     print("=" * 60)
-    print(f"{title} - 16avos World Cup 2026")
+    print(f"{title} - {ronda} World Cup 2026")
     print("=" * 60)
 
     nlp_data = None
@@ -467,20 +471,28 @@ def main():
     X_tr, X_val = X[train_idx], X[val_idx]
     y_tr, y_val = y[train_idx], y[val_idx]
 
+    # Compute balanced class weights for XGBoost (no native class_weight)
+    classes = np.array([0, 1, 2])
+    tr_weights = compute_class_weight("balanced", classes=classes, y=y_tr)
+    sw_tr = tr_weights[y_tr]
+
     scaler = StandardScaler()
     X_tr_scaled = scaler.fit_transform(X_tr)
     X_val_scaled = scaler.transform(X_val)
 
     models = {
-        "rf": RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42, n_jobs=-1),
-        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05, random_state=42,
-                                  eval_metric="mlogloss"),
-        "svm": SVC(kernel="rbf", probability=True, random_state=42),
+        "rf": RandomForestClassifier(n_estimators=300, max_depth=12, random_state=42,
+                                     class_weight="balanced", n_jobs=-1),
+        "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05,
+                                 random_state=42, eval_metric="mlogloss"),
+        "svm": SVC(kernel="rbf", probability=True, random_state=42,
+                   class_weight="balanced"),
     }
 
     print("   Training base models...")
-    for name, model in models.items():
-        model.fit(X_tr_scaled, y_tr)
+    models["rf"].fit(X_tr_scaled, y_tr)
+    models["xgb"].fit(X_tr_scaled, y_tr, sample_weight=sw_tr)
+    models["svm"].fit(X_tr_scaled, y_tr)
 
     meta_val_base = np.zeros((len(y_val), 3 * 3))
     offset = 0
@@ -494,7 +506,8 @@ def main():
     else:
         meta_val = meta_val_base
 
-    meta = LogisticRegression(solver="lbfgs", max_iter=1000, C=0.1, random_state=42)
+    meta = LogisticRegression(solver="lbfgs", max_iter=1000, C=0.1,
+                               class_weight="balanced", random_state=42)
     meta.fit(meta_val, y_val)
 
     val_probs = meta.predict_proba(meta_val)
@@ -504,11 +517,17 @@ def main():
 
     print("\n   Retraining base models on full data...")
     X_full_scaled = scaler.fit_transform(X)
-    for name, model in models.items():
-        model.fit(X_full_scaled, y)
+    full_weights = compute_class_weight("balanced", classes=classes, y=y)
+    sw_full = full_weights[y]
+    models["rf"].fit(X_full_scaled, y)
+    models["xgb"].fit(X_full_scaled, y, sample_weight=sw_full)
+    models["svm"].fit(X_full_scaled, y)
 
-    print("\n[4] Predicting 16avos matchups...")
-    with open(KNOCKOUT_MATCHES) as f:
+    matches_file = "data/8avos_matches.json" if es_8avos else "data/knockout_matches.json"
+    output_csv = f"data/{ronda}_predictions_nlp.csv" if use_nlp else f"data/{ronda}_predictions.csv"
+
+    print(f"\n[4] Predicting {ronda} matchups...")
+    with open(matches_file) as f:
         matches = json.load(f)
 
     predictions_rows = []
@@ -603,7 +622,6 @@ def main():
             "most_likely_score_pct": round(poisson_scores[0][1] * 100, 1) if poisson_scores else 0,
         })
 
-    output_csv = "data/knockout_predictions_nlp.csv" if use_nlp else "data/knockout_predictions.csv"
     print(f"\n   {'=' * 60}")
     pl.DataFrame(predictions_rows).write_csv(output_csv)
     print(f"   Predictions saved to {output_csv}")
