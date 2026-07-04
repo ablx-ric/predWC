@@ -43,6 +43,8 @@ PREDICTIONS_8AVOS_NLP = "data/8avos_predictions_nlp.csv"
 LOCAL_COLOR = "#3498db"
 AWAY_COLOR = "#e67e22"
 
+RONDA = "16avos"  # set in main()
+
 
 def plot_advancement(df):
     if df.is_empty():
@@ -58,7 +60,7 @@ def plot_advancement(df):
     ax.set_yticks(y)
     ax.set_yticklabels(matches, fontsize=8)
     ax.set_xlabel("Probabilidad de avance (%)")
-    ax.set_title("Avance a Octavos de Final — Mundial 2026")
+    ax.set_title(f"Avance a {'Cuartos' if RONDA == '8avos' else 'Octavos'} de Final — Mundial 2026")
     ax.legend()
     ax.set_xlim(0, 105)
     for i, (l, a) in enumerate(zip(df["local_advance_pct"], df["away_advance_pct"])):
@@ -91,7 +93,7 @@ def plot_match_probabilities(df):
         ax.set_title(row["match"], fontsize=8)
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
-    fig.suptitle("Probabilidades por partido — 16avos Mundial 2026", fontsize=14, y=1.02)
+    fig.suptitle(f"Probabilidades por partido — {RONDA} Mundial 2026", fontsize=14, y=1.02)
     fig.tight_layout()
     return fig
 
@@ -120,7 +122,7 @@ def plot_confidence_gauge(df):
 
 def plot_poisson_panel(df):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
-    _set_title(fig, "Poisson — Scores Esperados")
+    _set_title(fig, "Dixon-Coles — Scores Esperados")
 
     # Left: Expected goals comparison
     x = np.arange(len(df))
@@ -130,7 +132,7 @@ def plot_poisson_panel(df):
     ax1.set_xticks(x)
     ax1.set_xticklabels([m.replace(" vs ", "\n") for m in df["match"]], fontsize=7)
     ax1.set_ylabel("Goles esperados (λ)")
-    ax1.set_title("Goles esperados por equipo (Poisson)")
+    ax1.set_title("Goles esperados por equipo (Dixon-Coles)")
     ax1.legend()
     ax1.tick_params(axis="x", labelsize=6)
 
@@ -145,7 +147,7 @@ def plot_poisson_panel(df):
     ax2.set_yticks(range(len(df)))
     ax2.set_yticklabels(matches_short, fontsize=7)
     ax2.set_xlabel("Probabilidad (%)")
-    ax2.set_title("Score más probable (Poisson + Monte Carlo)")
+    ax2.set_title("Score más probable (Dixon-Coles + Monte Carlo)")
     for i, (label, pct) in enumerate(zip(score_labels, df["most_likely_score_pct"])):
         ax2.text(pct + 0.5, i, label, va="center", fontsize=7)
     ax2.set_xlim(0, df["most_likely_score_pct"].max() + 10)
@@ -158,7 +160,9 @@ def main():
     use_nlp = "--nlp" in sys.argv
     es_8avos = "--8avos" in sys.argv
 
+    global RONDA
     ronda = "8avos" if es_8avos else "16avos"
+    RONDA = ronda
     csv_path = (PREDICTIONS_8AVOS_NLP if es_8avos else PREDICTIONS_NLP) if use_nlp else (PREDICTIONS_8AVOS if es_8avos else PREDICTIONS)
     print("=" * 50)
     print(f"  SHOW RESULTS — World Cup 2026 {ronda}")
@@ -188,7 +192,7 @@ def main():
             if fig is None:
                 continue
             fig.savefig(f"data/{name}", dpi=130, bbox_inches="tight",
-                        facecolor=fig.get_facecolor() if hasattr(fig, 'get_facecolor') else None)
+                        facecolor=fig.get_facecolor())
             print(f"  Saved data/{name}")
             plt.close(fig)
         print("\nDone.")

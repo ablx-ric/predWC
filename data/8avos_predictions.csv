@@ -1,9 +1,9 @@
 match,local_win_pct,draw_pct,away_win_pct,local_advance_pct,away_advance_pct,expected_goals_local,expected_goals_away,most_likely_score,most_likely_score_pct
-Paraguay vs France,7.7,29.2,63.1,22.3,77.7,0.36,2.37,0-2,18.2
-Canada vs Morocco,12.0,40.5,47.6,32.2,67.8,0.93,1.8,1-1,12.3
-Portugal vs Spain,18.5,45.3,36.3,41.1,58.9,0.85,1.88,1-1,11.8
-United States vs Belgium,14.1,43.4,42.5,35.8,64.2,0.91,1.82,1-1,12.2
-Brazil vs Norway,35.1,44.0,20.9,57.1,42.9,1.76,0.97,1-1,12.3
-Mexico vs England,17.0,46.1,36.9,40.0,60.0,1.06,1.67,1-1,13.1
-Argentina vs Egypt,64.9,28.7,6.4,79.2,20.8,2.49,0.24,2-0,19.8
-Switzerland vs Colombia,12.1,43.8,44.0,34.0,66.0,1.22,1.51,1-1,13.3
+Paraguay vs France,6.6,25.4,68.0,19.3,80.7,0.36,2.37,0-2,18.2
+Canada vs Morocco,9.7,37.1,53.2,28.3,71.7,0.93,1.8,1-1,12.3
+Portugal vs Spain,11.5,43.3,45.2,33.2,66.8,0.85,1.88,1-1,11.8
+United States vs Belgium,13.0,42.8,44.1,34.4,65.6,0.91,1.82,1-1,12.2
+Brazil vs Norway,29.6,48.8,21.5,54.1,45.9,1.76,0.97,1-1,12.3
+Mexico vs England,14.3,44.7,40.9,36.7,63.3,1.06,1.67,1-1,13.1
+Argentina vs Egypt,64.2,29.5,6.3,78.9,21.1,2.49,0.24,2-0,19.8
+Switzerland vs Colombia,10.2,42.4,47.4,31.4,68.6,1.22,1.51,1-1,13.3

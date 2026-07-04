@@ -211,15 +211,15 @@ def draw_match_card(ax, x, y, r, card_w, card_h):
     ax.text(x + 0.02, ly, av_l, fontsize=4.8, ha="left", va="center", color=av_c, fontfamily="monospace")
 
 
-def plot_bracket_overview(rows):
+def plot_bracket_overview(rows, ronda="16avos"):
     fig, ax = plt.subplots(figsize=(16, 10))
     _set_title(fig, "Bracket Tracker \u2014 Pizarra")
     fig.patch.set_facecolor(BG_COLOR)
     ax.set_facecolor(BG_COLOR)
 
     n = len(rows)
-    cols = 4
-    card_w = 0.235
+    cols = 4 if n > 8 else 2
+    card_w = 0.235 if n > 8 else 0.47
     card_h = 0.19
     gap_x = 0.012
     gap_y = 0.025
@@ -235,9 +235,8 @@ def plot_bracket_overview(rows):
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    # Title bar at top
     ax.text(0.5, 0.995,
-            "Bracket 16avos \u2014 Mundial 2026    |    [+]=acierto  [x]=fallo  [ ]=pendiente",
+            f"Bracket {ronda} \u2014 Mundial 2026    |    [+]=acierto  [x]=fallo  [ ]=pendiente",
             fontsize=8, fontweight="bold", ha="center", va="top", color="#2c3e50")
 
     # Footer stats
@@ -700,7 +699,7 @@ def main():
     if use_graphs:
         prefix = f"{ronda}_" if es_8avos else ""
         figs = [
-            (f"{prefix}bracket_overview.png", plot_bracket_overview(rows)),
+            (f"{prefix}bracket_overview.png", plot_bracket_overview(rows, ronda)),
             (f"{prefix}accuracy_summary.png", plot_accuracy_summary(rows)),
             (f"{prefix}confidence_vs_outcome.png", plot_confidence_vs_outcome(rows)),
             (f"{prefix}score_comparison.png", plot_score_comparison(rows)),
