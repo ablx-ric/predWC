@@ -22,7 +22,7 @@ from sklearn.metrics import (
     brier_score_loss, confusion_matrix, classification_report
 )
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
 from sklearn.utils.class_weight import compute_class_weight
 
 warnings.filterwarnings("ignore")
@@ -459,14 +459,16 @@ def main():
                                      class_weight="balanced", n_jobs=-1),
         "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05,
                                  random_state=42, eval_metric="mlogloss"),
-        "svm": SVC(kernel="rbf", probability=True, random_state=42,
-                   class_weight="balanced"),
+        "mlp": MLPClassifier(hidden_layer_sizes=(15,), activation="relu",
+                              solver="adam", max_iter=5000, random_state=42,
+                              early_stopping=True, validation_fraction=0.1,
+                              alpha=0.001),
     }
 
     print("\n[3] Training base models...")
     models["rf"].fit(X_tr_scaled, y_tr)
     models["xgb"].fit(X_tr_scaled, y_tr, sample_weight=sw_tr)
-    models["svm"].fit(X_tr_scaled, y_tr)
+    models["mlp"].fit(X_tr_scaled, y_tr)
 
     meta_val = np.zeros((len(y_val), 9))
     offset = 0

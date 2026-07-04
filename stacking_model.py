@@ -13,8 +13,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
 from sklearn.utils.class_weight import compute_class_weight
+from scipy.stats import poisson as scipy_poisson
 
 warnings.filterwarnings("ignore")
 
@@ -295,7 +296,20 @@ def build_features_for_match(match, matches_df, match_date, elo_lookup, static_e
     return fv, home, away, swapped
 
 
-def predict_poisson_scores(home_elo, away_elo, overall_avg, n_sim=50000, seed=42):
+def dc_rho_correction(x, y, lambda_h, lambda_a, rho):
+    if x == 0 and y == 0:
+        return 1 - (lambda_h * lambda_a * rho)
+    elif x == 0 and y == 1:
+        return 1 + (lambda_h * rho)
+    elif x == 1 and y == 0:
+        return 1 + (lambda_a * rho)
+    elif x == 1 and y == 1:
+        return 1 - rho
+    return 1.0
+
+
+def predict_dixon_coles_scores(home_elo, away_elo, overall_avg, rho=-0.13, n_sim=50000, seed=42,
+                                max_goals=10):
     rng = np.random.default_rng(seed)
 
     elo_diff = home_elo - away_elo
@@ -305,8 +319,23 @@ def predict_poisson_scores(home_elo, away_elo, overall_avg, n_sim=50000, seed=42
     lambda_home = max(total_goals * goal_ratio / (1 + goal_ratio), 0.05)
     lambda_away = max(total_goals / (1 + goal_ratio), 0.05)
 
-    hg = rng.poisson(lambda_home, n_sim)
-    ag = rng.poisson(lambda_away, n_sim)
+    # Analytical Dixon-Coles probabilities for scores 0..max_goals
+    px = np.array([scipy_poisson.pmf(i, lambda_home) for i in range(max_goals + 1)])
+    py = np.array([scipy_poisson.pmf(j, lambda_away) for j in range(max_goals + 1)])
+    probs_matrix = np.outer(px, py)
+
+    # Apply tau correction to low-scoring results (0-0, 1-0, 0-1, 1-1)
+    corr = np.ones_like(probs_matrix)
+    for x in range(2):
+        for y in range(2):
+            corr[x, y] = dc_rho_correction(x, y, lambda_home, lambda_away, rho)
+    probs_matrix = probs_matrix * corr
+    probs_matrix /= probs_matrix.sum()  # renormalise
+
+    # Monte Carlo sample from adjusted distribution
+    flat_idx = rng.choice((max_goals + 1) ** 2, size=n_sim, p=probs_matrix.ravel())
+    hg = flat_idx // (max_goals + 1)
+    ag = flat_idx % (max_goals + 1)
 
     unique, counts = np.unique(np.column_stack([hg, ag]), axis=0, return_counts=True)
     probs = counts / n_sim
@@ -485,14 +514,16 @@ def main():
                                      class_weight="balanced", n_jobs=-1),
         "xgb": xgb.XGBClassifier(n_estimators=300, max_depth=8, learning_rate=0.05,
                                  random_state=42, eval_metric="mlogloss"),
-        "svm": SVC(kernel="rbf", probability=True, random_state=42,
-                   class_weight="balanced"),
+        "mlp": MLPClassifier(hidden_layer_sizes=(15,), activation="relu",
+                              solver="adam", max_iter=5000, random_state=42,
+                              early_stopping=True, validation_fraction=0.1,
+                              alpha=0.001),
     }
 
     print("   Training base models...")
     models["rf"].fit(X_tr_scaled, y_tr)
     models["xgb"].fit(X_tr_scaled, y_tr, sample_weight=sw_tr)
-    models["svm"].fit(X_tr_scaled, y_tr)
+    models["mlp"].fit(X_tr_scaled, y_tr)
 
     meta_val_base = np.zeros((len(y_val), 3 * 3))
     offset = 0
@@ -521,7 +552,7 @@ def main():
     sw_full = full_weights[y]
     models["rf"].fit(X_full_scaled, y)
     models["xgb"].fit(X_full_scaled, y, sample_weight=sw_full)
-    models["svm"].fit(X_full_scaled, y)
+    models["mlp"].fit(X_full_scaled, y)
 
     matches_file = "data/8avos_matches.json" if es_8avos else "data/knockout_matches.json"
     output_csv = f"data/{ronda}_predictions_nlp.csv" if use_nlp else f"data/{ronda}_predictions.csv"
@@ -578,12 +609,12 @@ def main():
         print(f"   {'\u2500' * 60}")
         print(f"   STACKING  | Local: {local_w:5.1f}%  Empate: {draw_p:5.1f}%  Visitante: {away_w:5.1f}%")
 
-        poisson_scores, lambda_home, lambda_away = predict_poisson_scores(
+        dc_scores, lambda_home, lambda_away = predict_dixon_coles_scores(
             fv["home_elo"], fv["away_elo"], overall_avg_goals,
         )
-        print(f"\n   POISSON   | \u03bb local={lambda_home:.2f}  \u03bb visitante={lambda_away:.2f}")
+        print(f"\n   DIXON-COLES | \u03bb local={lambda_home:.2f}  \u03bb visitante={lambda_away:.2f}")
         print(f"   {'\u2500' * 32}")
-        for score, prob in poisson_scores[:5]:
+        for score, prob in dc_scores[:5]:
             print(f"   {score:>5s} \u2192 {prob*100:5.2f}%")
 
         local_adv = final_proba[0] + final_proba[1] * 0.5
@@ -618,8 +649,8 @@ def main():
             "away_advance_pct": round(csv_away_adv, 1),
             "expected_goals_local": round(lambda_home, 2),
             "expected_goals_away": round(lambda_away, 2),
-            "most_likely_score": poisson_scores[0][0] if poisson_scores else "",
-            "most_likely_score_pct": round(poisson_scores[0][1] * 100, 1) if poisson_scores else 0,
+            "most_likely_score": dc_scores[0][0] if dc_scores else "",
+            "most_likely_score_pct": round(dc_scores[0][1] * 100, 1) if dc_scores else 0,
         })
 
     print(f"\n   {'=' * 60}")
