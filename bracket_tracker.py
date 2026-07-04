@@ -131,6 +131,13 @@ def find_advance_info(actual_ko, local, away):
 # ────────────────────────────────────────────────────────────────
 
 
+def _set_title(fig, title):
+    try:
+        fig.canvas.manager.set_window_title(title)
+    except AttributeError:
+        pass
+
+
 def short_name(name, ml=10): return name if len(name) <= ml else name[:ml-1] + "."
 
 
@@ -206,7 +213,7 @@ def draw_match_card(ax, x, y, r, card_w, card_h):
 
 def plot_bracket_overview(rows):
     fig, ax = plt.subplots(figsize=(16, 10))
-    fig.canvas.manager.set_window_title("Bracket Tracker \u2014 Pizarra")
+    _set_title(fig, "Bracket Tracker \u2014 Pizarra")
     fig.patch.set_facecolor(BG_COLOR)
     ax.set_facecolor(BG_COLOR)
 
@@ -260,7 +267,7 @@ def plot_confidence_vs_outcome(rows):
     n = len(played)
     fig_w = min(3.2 * n, 14)
     fig, axes = plt.subplots(1, n, figsize=(fig_w, 4.2))
-    fig.canvas.manager.set_window_title("Confianza vs Resultado")
+    _set_title(fig, "Confianza vs Resultado")
     fig.patch.set_facecolor(BG_COLOR)
     if n == 1:
         axes = [axes]
@@ -315,7 +322,7 @@ def plot_accuracy_summary(rows):
     n = len(rows)
 
     fig, (ax_left, ax_mid, ax_right) = plt.subplots(1, 3, figsize=(13, 4.5))
-    fig.canvas.manager.set_window_title("Accuracy \u2014 Resumen")
+    _set_title(fig, "Accuracy \u2014 Resumen")
     fig.patch.set_facecolor(BG_COLOR)
 
     # ── Left: Clasificación ──
@@ -404,7 +411,7 @@ def plot_score_comparison(rows):
     ncols = min(n, 2)
     nrows = (n + 1) // 2
     fig, axes = plt.subplots(nrows, ncols, figsize=(6.5, 3.5 * nrows))
-    fig.canvas.manager.set_window_title("Score: Predicci\u00f3n vs Real")
+    _set_title(fig, "Score: Predicci\u00f3n vs Real")
     fig.patch.set_facecolor(BG_COLOR)
     axes_flat = [axes] if n == 1 else axes.flatten()
     for ax in axes_flat:

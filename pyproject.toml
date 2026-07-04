@@ -5,7 +5,6 @@ description = "World Cup 2026 Knockout Predictor - Stacking Ensemble + NLP"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "duckdb>=1.5.4",
     "feedparser>=6.0.12",
     "google-api-python-client>=2.198.0",
     "matplotlib>=3.11.0",
@@ -14,9 +13,10 @@ dependencies = [
     "polars>=1.41.2",
     "requests>=2.34.0",
     "scikit-learn>=1.9.0",
+    "scipy>=1.16.0",
     "seaborn>=0.13.2",
     "sentence-transformers>=5.6.0",
     "textblob>=0.20.0",
     "trafilatura>=2.1.0",
-    "xgboost>=3.3.0",
+    "xgboost>=3.0.0",
 ]

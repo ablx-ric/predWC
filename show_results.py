@@ -27,6 +27,13 @@ if "--save" not in sys.argv:
 sns.set_style("whitegrid")
 plt.rcParams.update({"font.size": 11, "figure.dpi": 120})
 
+
+def _set_title(fig, title):
+    try:
+        fig.canvas.manager.set_window_title(title)
+    except AttributeError:
+        pass
+
 PREDICTIONS = "data/knockout_predictions.csv"
 PREDICTIONS_NLP = "data/knockout_predictions_nlp.csv"
 PREDICTIONS_8AVOS = "data/8avos_predictions.csv"
@@ -42,7 +49,7 @@ def plot_advancement(df):
         print("  No data to plot")
         return None
     fig, ax = plt.subplots(figsize=(10, 8))
-    fig.canvas.manager.set_window_title("Avance a 16avos")
+    _set_title(fig, "Avance a Octavos")
     matches = [m.replace(" vs ", "\nvs\n") for m in df["match"]]
     y = np.arange(len(matches))
     width = 0.35
@@ -68,7 +75,7 @@ def plot_match_probabilities(df):
     n = len(df)
     rows = (n + 3) // 4
     fig, axes = plt.subplots(rows, 4, figsize=(14, 3 * rows))
-    fig.canvas.manager.set_window_title("Probabilidades por partido")
+    _set_title(fig, "Probabilidades por partido")
     axes = axes.flatten()
     colors = [LOCAL_COLOR, "#f39c12", AWAY_COLOR]
     for i, row in enumerate(df.iter_rows(named=True)):
@@ -91,7 +98,7 @@ def plot_match_probabilities(df):
 
 def plot_confidence_gauge(df):
     fig, ax = plt.subplots(figsize=(10, 4))
-    fig.canvas.manager.set_window_title("Confianza del modelo")
+    _set_title(fig, "Confianza del modelo")
     df = df.with_columns(
         (pl.max_horizontal("local_win_pct", "away_win_pct")).alias("max_prob")
     )
@@ -113,7 +120,7 @@ def plot_confidence_gauge(df):
 
 def plot_poisson_panel(df):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
-    fig.canvas.manager.set_window_title("Poisson — Scores Esperados")
+    _set_title(fig, "Poisson — Scores Esperados")
 
     # Left: Expected goals comparison
     x = np.arange(len(df))

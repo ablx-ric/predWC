@@ -6,6 +6,7 @@ Usage:
     uv run python evaluate_model.py
 """
 
+import bisect
 import json
 import warnings
 from datetime import datetime, timedelta
@@ -101,9 +102,6 @@ def load_static_elo():
         for team in json.load(f):
             elo[team["team"]] = float(team["rating"])
     return elo
-
-
-import bisect
 
 
 def load_elo_history():

@@ -18,7 +18,7 @@ def run_script(script_name, label):
     print(f"  [{label}] Running {script_name}...")
     print(f"{'=' * 50}")
     result = subprocess.run(
-        [sys.executable, str(path)],
+        ["uv", "run", "python", str(path)],
         cwd=str(ROOT),
         capture_output=True, text=True
     )

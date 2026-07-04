@@ -1,6 +1,6 @@
 # predWC — World Cup 2026 Knockout Predictor
 
-Stacking ensemble (Random Forest + XGBoost + SVM → Logistic Regression) que predice los 16avos de final del Mundial 2026. Versión con features NLP opcionales (news embeddings + YouTube sentiment).
+Stacking ensemble (Random Forest + XGBoost + MLP → Logistic Regression) que predice los 16avos de final del Mundial 2026. Versión con features NLP opcionales (news embeddings + YouTube sentiment).
 
 ## Requisitos
 
@@ -96,7 +96,7 @@ Los gráficos incluyen:
 uv run python evaluate_model.py
 ```
 
-Calcula F1 macro/weighted, MCC, Brier score, matriz de confusión, calibración por bins y comparación por modelo base (RF / XGB / SVM / Stacking).
+Calcula F1 macro/weighted, MCC, Brier score, matriz de confusión, calibración por bins y comparación por modelo base (RF / XGB / MLP / Stacking).
 
 ## Actualizar datos
 

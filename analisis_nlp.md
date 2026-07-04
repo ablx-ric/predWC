@@ -33,18 +33,18 @@ Para que NLP tenga impacto real:
 
 Sin eso, las features NLP son mayormente decorativas.
 
-### 4. Validación del modelo base
+### 4. Validación del modelo (RF + XGBoost + MLP → LogisticRegression)
 
 | Métrica | Valor |
 |---------|-------|
-| Accuracy temporal | 58.81% |
-| Log-loss | 0.8761 |
-| F1 macro | 0.4351 |
-| MCC | 0.3246 |
-| Top-2 accuracy | 83.11% |
-| ECE | 0.0106 |
+| Accuracy temporal | 61.44% |
+| Log-loss | 0.8235 |
+| F1 macro | 0.5847 |
+| MCC | 0.4059 |
+| Top-2 accuracy | 86.94% |
+| ECE | 0.0254 |
 
-Sobre 1634 partidos futuros (sin leakage), supera el baseline aleatorio (33.3%). Las 25 features deportivas capturan la mayor parte de la señal predictiva.
+Sobre ~1639 partidos futuros (sin leakage). Modelo usa `class_weight='balanced'` y score prediction con Dixon-Coles (corrección τ).
 
 ## Conclusión
 

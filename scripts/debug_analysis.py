@@ -61,8 +61,6 @@ for m in matches:
         break
 
 print("\n\n=== TRAINING: Raw rolling stats for Mexico ===")
-# Compute rolling stats for Mexico
-from datetime import date
 test_date = datetime(2026, 6, 27)
 hs = sm.compute_rolling_stats(df, "Mexico", test_date, elo_lookup, static_elo, window_matches=10)
 for k, v in hs.items():
