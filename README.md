@@ -158,20 +158,39 @@ YOUTUBE:
 | `data/actual_knockout_results.json` | Resultados reales con info de penales |
 | `scripts/` | Scrapers (ELO, noticias, YouTube) y utilidades |
 
-## Salida del modelo
+## Predicciones 8avos — Octavos de Final
 
-Ambos modos muestran:
-- Accuracy y log-loss en validación temporal
-- Probabilidad local / empate / visitante para cada partido (RF, XGB, MLP, Stacking)
-- λ Dixon-Coles y top 5 scores exactos más probables
-- Probabilidad de avance (empate repartido 50/50)
-- Features NLP por equipo (solo con `--nlp`)
+### Tabla de predicciones (modelo base)
 
-Guardan:
-- `data/knockout_predictions.csv` — predicciones 16avos base
-- `data/knockout_predictions_nlp.csv` — predicciones 16avos NLP
-- `data/8avos_predictions.csv` — predicciones 8avos base
-- `data/8avos_predictions_nlp.csv` — predicciones 8avos NLP
+| Partido | Local | Empate | Visitante | Avance Local | Avance Visit. | Score más probable |
+|---------|-------|--------|-----------|-------------|--------------|-------------------|
+| Paraguay vs Francia | 6.6% | 25.4% | **68.0%** | 19.3% | **80.7%** | 0-2 (18.2%) |
+| Canadá vs Marruecos | 9.7% | 37.1% | **53.2%** | 28.3% | **71.7%** | 1-1 (12.3%) |
+| Portugal vs España | 11.5% | **43.3%** | 45.2% | 33.2% | **66.8%** | 1-1 (11.8%) |
+| EE. UU. vs Bélgica | 13.0% | **42.8%** | 44.1% | 34.4% | **65.6%** | 1-1 (12.2%) |
+| Brasil vs Noruega | 29.6% | **48.8%** | 21.5% | **54.1%** | 45.9% | 1-1 (12.3%) |
+| México vs Inglaterra | 14.3% | **44.7%** | 40.9% | 36.7% | **63.3%** | 1-1 (13.1%) |
+| Argentina vs Egipto | **64.2%** | 29.5% | 6.3% | **78.9%** | 21.1% | 2-0 (19.8%) |
+| Suiza vs Colombia | 10.2% | 42.4% | **47.4%** | 31.4% | **68.6%** | 1-1 (13.3%) |
+
+### Gráficas
+
+Las gráficas se generan con:
+
+```bash
+uv run python show_results.py --8avos --save     # probabilidades, avance, confianza, scores
+uv run python bracket_tracker.py --8avos --graphs --save  # bracket tracker
+```
+
+Los PNGs se guardan en `data/8avos_*.png` (gitignored — disponibles localmente al ejecutar los comandos).
+
+### CSV
+
+```bash
+uv run python stacking_model.py --8avos --max-date 2026-07-03
+```
+
+Guarda en `data/8avos_predictions.csv` (incluido en el repo para referencia).
 
 ## Tracker en vivo — métricas duales
 
