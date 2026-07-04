@@ -20,8 +20,11 @@ if "--graphs" in sys.argv:
 
 RESULTS_URL = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/results.csv"
 KNOCKOUT_MATCHES = "data/knockout_matches.json"
+MATCHES_8AVOS = "data/8avos_matches.json"
 PREDICTIONS = "data/knockout_predictions.csv"
 PREDICTIONS_NLP = "data/knockout_predictions_nlp.csv"
+PREDICTIONS_8AVOS = "data/8avos_predictions.csv"
+PREDICTIONS_8AVOS_NLP = "data/8avos_predictions_nlp.csv"
 ACTUAL_KNOCKOUT = "data/actual_knockout_results.json"
 WC_YEAR = 2026
 
@@ -461,12 +464,15 @@ def main():
     use_graphs = "--graphs" in sys.argv
     use_nlp = "--nlp" in sys.argv
     save_mode = "--save" in sys.argv
+    es_8avos = "--8avos" in sys.argv
 
-    csv_path = PREDICTIONS_NLP if use_nlp else PREDICTIONS
+    ronda = "8avos" if es_8avos else "16avos"
+    matches_file = MATCHES_8AVOS if es_8avos else KNOCKOUT_MATCHES
+    csv_path = (PREDICTIONS_8AVOS_NLP if es_8avos else PREDICTIONS_NLP) if use_nlp else (PREDICTIONS_8AVOS if es_8avos else PREDICTIONS)
     label = "NLP" if use_nlp else "BASE"
 
     print("=" * 68)
-    print(f"  BRACKET TRACKER \u2014 16avos World Cup 2026  [{label}]")
+    print(f"  BRACKET TRACKER \u2014 {ronda} World Cup 2026  [{label}]")
     print("=" * 68)
 
     if use_graphs:
@@ -483,7 +489,7 @@ def main():
             pass
         plt.rcParams.update({"font.size": 11, "figure.dpi": 130})
 
-    with open(KNOCKOUT_MATCHES) as f:
+    with open(matches_file) as f:
         bracket = json.load(f)
 
     try:
@@ -675,19 +681,22 @@ def main():
         print(f"  {'':24s}  {'Clasificaci\u00f3n':15s}  {pred_av:18s}  {real_av:18s}{av_mark}")
         print(f"  {'-' * 68}")
 
+    rt_pct = f"{rt_correct / rt_played * 100:.0f}%" if rt_played > 0 else "—"
+    av_pct = f"{av_correct / av_played * 100:.0f}%" if av_played > 0 else "—"
     print(f"  {'=' * 68}")
-    print(f"  T.Regular: {rt_correct}/{rt_played} ({rt_correct/rt_played*100:.0f}%)  |  "
-          f"Clasificaci\u00f3n: {av_correct}/{av_played} ({av_correct/av_played*100:.0f}%)  |  "
+    print(f"  T.Regular: {rt_correct}/{rt_played} ({rt_pct})  |  "
+          f"Clasificaci\u00f3n: {av_correct}/{av_played} ({av_pct})  |  "
           f"Pendientes: {len(rows)-rt_played}/{len(rows)}")
     print(f"  {'=' * 68}")
 
     # ── Graphs ──
     if use_graphs:
+        prefix = f"{ronda}_" if es_8avos else ""
         figs = [
-            ("bracket_overview.png", plot_bracket_overview(rows)),
-            ("accuracy_summary.png", plot_accuracy_summary(rows)),
-            ("confidence_vs_outcome.png", plot_confidence_vs_outcome(rows)),
-            ("score_comparison.png", plot_score_comparison(rows)),
+            (f"{prefix}bracket_overview.png", plot_bracket_overview(rows)),
+            (f"{prefix}accuracy_summary.png", plot_accuracy_summary(rows)),
+            (f"{prefix}confidence_vs_outcome.png", plot_confidence_vs_outcome(rows)),
+            (f"{prefix}score_comparison.png", plot_score_comparison(rows)),
         ]
 
         if save_mode:

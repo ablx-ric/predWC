@@ -29,6 +29,8 @@ plt.rcParams.update({"font.size": 11, "figure.dpi": 120})
 
 PREDICTIONS = "data/knockout_predictions.csv"
 PREDICTIONS_NLP = "data/knockout_predictions_nlp.csv"
+PREDICTIONS_8AVOS = "data/8avos_predictions.csv"
+PREDICTIONS_8AVOS_NLP = "data/8avos_predictions_nlp.csv"
 
 
 LOCAL_COLOR = "#3498db"
@@ -147,10 +149,12 @@ def plot_poisson_panel(df):
 def main():
     save_mode = "--save" in sys.argv
     use_nlp = "--nlp" in sys.argv
+    es_8avos = "--8avos" in sys.argv
 
-    csv_path = PREDICTIONS_NLP if use_nlp else PREDICTIONS
+    ronda = "8avos" if es_8avos else "16avos"
+    csv_path = (PREDICTIONS_8AVOS_NLP if es_8avos else PREDICTIONS_NLP) if use_nlp else (PREDICTIONS_8AVOS if es_8avos else PREDICTIONS)
     print("=" * 50)
-    print("  SHOW RESULTS — World Cup 2026 Predictions")
+    print(f"  SHOW RESULTS — World Cup 2026 {ronda}")
     if use_nlp:
         print("  (NLP-enhanced predictions)")
     print("=" * 50)
@@ -165,16 +169,19 @@ def main():
     print()
 
     if save_mode:
+        prefix = f"{ronda}_" if es_8avos else ""
         print("Saving charts to data/ (use without --save for interactive windows)...")
         figs = [
-            ("advancement.png", plot_advancement(df)),
-            ("probabilities.png", plot_match_probabilities(df)),
-            ("confidence.png", plot_confidence_gauge(df)),
-            ("poisson_scores.png", plot_poisson_panel(df)),
+            (f"{prefix}advancement.png", plot_advancement(df)),
+            (f"{prefix}probabilities.png", plot_match_probabilities(df)),
+            (f"{prefix}confidence.png", plot_confidence_gauge(df)),
+            (f"{prefix}poisson_scores.png", plot_poisson_panel(df)),
         ]
         for name, fig in figs:
             if fig is None:
                 continue
+            fig.savefig(f"data/{name}", dpi=130, bbox_inches="tight",
+                        facecolor=fig.get_facecolor() if hasattr(fig, 'get_facecolor') else None)
             print(f"  Saved data/{name}")
             plt.close(fig)
         print("\nDone.")
