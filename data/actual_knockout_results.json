@@ -118,5 +118,101 @@
     "away_penalties": null,
     "advancing_team": "Belgium",
     "notes": "Bélgica 3-2 Senegal"
+  },
+  {
+    "local": "Paraguay",
+    "away": "France",
+    "local_goals_regular": 0,
+    "away_goals_regular": 1,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "France",
+    "notes": "Paraguay 0-1 Francia (8avos)"
+  },
+  {
+    "local": "Canada",
+    "away": "Morocco",
+    "local_goals_regular": 0,
+    "away_goals_regular": 3,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Morocco",
+    "notes": "Canadá 0-3 Marruecos (8avos)"
+  },
+  {
+    "local": "Brazil",
+    "away": "Norway",
+    "local_goals_regular": 1,
+    "away_goals_regular": 2,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Norway",
+    "notes": "Brasil 1-2 Noruega (8avos)"
+  },
+  {
+    "local": "Mexico",
+    "away": "England",
+    "local_goals_regular": 2,
+    "away_goals_regular": 3,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "England",
+    "notes": "México 2-3 Inglaterra (8avos)"
+  },
+  {
+    "local": "Portugal",
+    "away": "Spain",
+    "local_goals_regular": 0,
+    "away_goals_regular": 1,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Spain",
+    "notes": "Portugal 0-1 España (8avos)"
+  },
+  {
+    "local": "United States",
+    "away": "Belgium",
+    "local_goals_regular": 1,
+    "away_goals_regular": 4,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Belgium",
+    "notes": "Estados Unidos 1-4 Bélgica (8avos)"
+  },
+  {
+    "local": "Argentina",
+    "away": "Egypt",
+    "local_goals_regular": 3,
+    "away_goals_regular": 2,
+    "local_goals_extra": null,
+    "away_goals_extra": null,
+    "local_penalties": null,
+    "away_penalties": null,
+    "advancing_team": "Argentina",
+    "notes": "Argentina 3-2 Egipto (8avos)"
+  },
+  {
+    "local": "Switzerland",
+    "away": "Colombia",
+    "local_goals_regular": 0,
+    "away_goals_regular": 0,
+    "local_goals_extra": 0,
+    "away_goals_extra": 0,
+    "local_penalties": 4,
+    "away_penalties": 3,
+    "advancing_team": "Switzerland",
+    "notes": "Suiza 0-0 (4-3 pen) Colombia (8avos)"
   }
 ]
