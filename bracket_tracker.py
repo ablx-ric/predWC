@@ -218,8 +218,8 @@ def plot_bracket_overview(rows, ronda="16avos"):
     ax.set_facecolor(BG_COLOR)
 
     n = len(rows)
-    cols = 4 if n > 8 else 2
-    card_w = 0.235 if n > 8 else 0.47
+    cols = 4 if n > 4 else 2
+    card_w = 0.235 if n > 4 else 0.47
     card_h = 0.19
     gap_x = 0.012
     gap_y = 0.025
