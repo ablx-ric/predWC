@@ -1,6 +1,6 @@
 # predWC — World Cup 2026 Knockout Predictor
 
-Stacking ensemble (Random Forest + XGBoost + MLP → Logistic Regression) que predice 16avos y 8avos del Mundial 2026. Soporta `--8avos` para rondas posteriores. Versión con features NLP opcionales (news embeddings + YouTube sentiment).
+Stacking ensemble (Random Forest + XGBoost + MLP → Logistic Regression) que predice 16avos, 8avos y 4tos del Mundial 2026. Soporta `--8avos` y `--4tos` para rondas posteriores. Versión con features NLP opcionales (news embeddings + YouTube sentiment).
 
 ## Requisitos
 
@@ -45,11 +45,12 @@ uv run playwright install --with-deps chromium
 
 ```bash
 uv run python stacking_model.py                         # 16avos (default)
-uv run python stacking_model.py --8avos                 # 8avos (octavos de final)
+uv run python stacking_model.py --8avos                 # 8avos
+uv run python stacking_model.py --4tos                  # 4tos (cuartos de final)
 uv run python stacking_model.py --max-date 2026-07-03   # entrenar hasta fecha específica
 ```
 
-Construye 25 features por partido (ELO, forma reciente, h2h, peso del torneo, descanso), entrena stacking con split temporal 80/20 y evalúa en ~1640 partidos futuros (sin leakage). Predice scores con Dixon-Coles + Monte Carlo.
+Construye 25 features por partido (ELO, forma reciente, h2h, peso del torneo), entrena stacking con split temporal 80/20 y evalúa en ~1640 partidos futuros (sin leakage). Predice scores con Dixon-Coles + Monte Carlo.
 
 ### Modelo con NLP
 
@@ -64,17 +65,19 @@ Agrega 24 features NLP (11 componentes PCA de news embeddings + YouTube sentimen
 ```bash
 uv run python show_results.py            # resultados 16avos
 uv run python show_results.py --8avos    # resultados 8avos
+uv run python show_results.py --4tos     # resultados 4tos
 uv run python show_results.py --nlp      # resultados NLP
 uv run python show_results.py --save     # guarda PNG en vez de mostrar ventanas
 ```
 
-Abre 4 ventanas: avance, probabilidades, confianza y scores Dixon-Coles. Con `--8avos`, los títulos se adaptan (ej: "Avance a Cuartos").
+Abre 4 ventanas: avance, probabilidades, confianza y scores Dixon-Coles. Con `--8avos` o `--4tos`, los títulos se adaptan (ej: "Avance a Semifinales").
 
 ### Tracker en vivo de resultados
 
 ```bash
 uv run python bracket_tracker.py                  # tabla textual 16avos
 uv run python bracket_tracker.py --8avos          # tracker 8avos
+uv run python bracket_tracker.py --4tos           # tracker 4tos
 uv run python bracket_tracker.py --nlp            # con predicciones NLP
 uv run python bracket_tracker.py --graphs         # gráficos interactivos
 uv run python bracket_tracker.py --graphs --save  # guarda PNG
@@ -91,7 +94,7 @@ Germany vs Paraguay       T. Regular       Germany (44%)       Empate           
 ```
 
 Los gráficos incluyen:
-- **Pizarra de resultados** — cards con TR/SC/AV por partido (16 para 16avos, 8 para 8avos)
+- **Pizarra de resultados** — cards con TR/SC/AV por partido
 - **Perfiles de confianza** — barras L/E/V con resultado real destacado + línea 50%
 - **Marcador: Pred vs Real** — comparación de goles
 - **Panel de estadísticas** — aciertos de T.Regular y Clasificación
@@ -146,7 +149,7 @@ YOUTUBE:
 | Archivo | Descripción |
 |---------|-------------|
 | `stacking_model.py` | Modelo stacking (25 features base + 24 NLP opcionales, Dixon-Coles, WC2026 boost ×3) |
-| `bracket_tracker.py` | Tracker en vivo — tabla + gráficos con métricas duales (TR + Clasificación), soporta `--8avos` |
+| `bracket_tracker.py` | Tracker en vivo — tabla + gráficos con métricas duales (TR + Clasificación), soporta `--8avos` y `--4tos` |
 | `evaluate_model.py` | Evaluación extendida (F1, MCC, Brier, calibración, per-model comparison) |
 | `show_results.py` | Visualización interactiva con títulos dinámicos según ronda |
 | `install_all.py` | Auto-instalador (uv + dependencias + Playwright) |
@@ -155,42 +158,84 @@ YOUTUBE:
 | `apis.txt` | API keys (gitignored, requiere setup manual) |
 | `data/knockout_matches.json` | Bracket 16avos |
 | `data/8avos_matches.json` | Bracket 8avos |
+| `data/4tos_matches.json` | Bracket 4tos |
 | `data/actual_knockout_results.json` | Resultados reales con info de penales |
 | `scripts/` | Scrapers (ELO, noticias, YouTube) y utilidades |
 
-## Predicciones 8avos — Octavos de Final
+## Predicciones 16avos — Octavos de Final
 
-### Tabla de predicciones (modelo base)
+### Pronóstico vs Realidad
+
+| Partido | L | E | V | TR | Marcador Pred | Marcador Real | SC | Avance Pred | Avance Real | AV |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Germany vs Paraguay | **64%** | 25% | 10% | ✗ | 1-0 | **1-1** | ✗ | **Germany** (77%) | Paraguay (3-4 pen) | ✗ |
+| France vs Sweden | **76%** | 18% | 5% | ✓ | 2-0 | **3-0** | ✗ | **France** (85%) | France | ✓ |
+| South Africa vs Canada | 19% | 30% | **51%** | ✓ | 1-1 | **0-1** | ✗ | **Canada** (66%) | Canada | ✓ |
+| Netherlands vs Morocco | **42%** | 35% | 23% | ✗ | 1-0 | **1-1** | ✗ | **Netherlands** (59%) | Morocco (2-3 pen) | ✗ |
+| Portugal vs Croatia | **46%** | 34% | 20% | ✓ | 1-1 | **2-1** | ✗ | **Portugal** (63%) | Portugal | ✓ |
+| Spain vs Austria | **76%** | 18% | 5% | ✓ | 2-0 | **3-0** | ✗ | **Spain** (86%) | Spain | ✓ |
+| US vs Bosnia-H. | **45%** | 36% | 19% | ✓ | 1-0 | **2-0** | ✗ | **US** (63%) | United States | ✓ |
+| Belgium vs Senegal | 28% | 35% | **37%** | ✗ | 1-1 | **3-2** | ✗ | **Senegal** (55%) | Belgium | ✗ |
+| Brazil vs Japan | **71%** | 21% | 8% | ✓ | 1-0 | **2-1** | ✗ | **Brazil** (81%) | Brazil | ✓ |
+| Ivory Coast vs Norway | 8% | 18% | **74%** | ✓ | 0-2 | **1-2** | ✗ | **Norway** (83%) | Norway | ✓ |
+| Mexico vs Ecuador | 30% | 36% | **34%** | ✗ | 1-1 | **2-0** | ✗ | **Ecuador** (52%) | Mexico | ✗ |
+| England vs Congo DR | **74%** | 20% | 6% | ✓ | 2-0 | **2-1** | ✗ | **England** (84%) | England | ✓ |
+| Argentina vs Cape Verde | **76%** | 18% | 6% | ✓ | 2-0 | **3-2** | ✗ | **Argentina** (86%) | Argentina | ✓ |
+| Australia vs Egypt | **42%** | 37% | 21% | ✗ | 1-1 | **1-1** | ✓ | **Australia** (61%) | — | — |
+| Switzerland vs Algeria | **39%** | 35% | 26% | ✓ | 1-0 | **2-0** | ✗ | **Switzerland** (57%) | Switzerland | ✓ |
+| Colombia vs Ghana | **82%** | 14% | 4% | ✓ | 2-0 | **1-0** | ✗ | **Colombia** (89%) | Colombia | ✓ |
+
+**Resumen:** T.Regular **11/16 (69%)** | Clasificación **11/15 (73%)** | Marcador **1/16 (6%)**
+
+## Predicciones 8avos — Cuartos de Final
+
+### Pronóstico vs Realidad
+
+| Partido | L | E | V | TR | Marcador Pred | Marcador Real | SC | Avance Pred | Avance Real | AV |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Paraguay vs France | 7% | 25% | **68%** | ✓ | 0-2 | **0-1** | ✗ | **France** (81%) | France | ✓ |
+| Canada vs Morocco | 10% | 37% | **53%** | ✓ | 1-1 | **0-3** | ✗ | **Morocco** (72%) | Morocco | ✓ |
+| Portugal vs Spain | 11% | **43%** | 45% | ✓ | 1-1 | **0-1** | ✗ | **Spain** (67%) | Spain | ✓ |
+| US vs Belgium | 13% | **43%** | 44% | ✓ | 1-1 | **1-4** | ✗ | **Belgium** (66%) | Belgium | ✓ |
+| Brazil vs Norway | 30% | **49%** | 22% | ✗ | 1-1 | **1-2** | ✗ | **Brazil** (54%) | Norway | ✗ |
+| Mexico vs England | 14% | **45%** | 41% | ✗ | 1-1 | **2-3** | ✗ | **England** (63%) | England | ✓ |
+| Argentina vs Egypt | **64%** | 30% | 6% | ✓ | 2-0 | **3-2** | ✗ | **Argentina** (79%) | Argentina | ✓ |
+| Switzerland vs Colombia | 10% | 42% | **47%** | ✗ | 1-1 | **0-0** | ✗ | **Colombia** (69%) | Switzerland (4-3 pen) | ✗ |
+
+**Resumen:** T.Regular **5/8 (62%)** | Clasificación **6/8 (75%)** | Marcador **0/8 (0%)**
+
+## Predicciones 4tos — Semifinales
+
+### Pronóstico
 
 | Partido | Local | Empate | Visitante | Avance Local | Avance Visit. | Score más probable |
 |---------|-------|--------|-----------|-------------|--------------|-------------------|
-| Paraguay vs Francia | 6.6% | 25.4% | **68.0%** | 19.3% | **80.7%** | 0-2 (18.2%) |
-| Canadá vs Marruecos | 9.7% | 37.1% | **53.2%** | 28.3% | **71.7%** | 1-1 (12.3%) |
-| Portugal vs España | 11.5% | **43.3%** | 45.2% | 33.2% | **66.8%** | 1-1 (11.8%) |
-| EE. UU. vs Bélgica | 13.0% | **42.8%** | 44.1% | 34.4% | **65.6%** | 1-1 (12.2%) |
-| Brasil vs Noruega | 29.6% | **48.8%** | 21.5% | **54.1%** | 45.9% | 1-1 (12.3%) |
-| México vs Inglaterra | 14.3% | **44.7%** | 40.9% | 36.7% | **63.3%** | 1-1 (13.1%) |
-| Argentina vs Egipto | **64.2%** | 29.5% | 6.3% | **78.9%** | 21.1% | 2-0 (19.8%) |
-| Suiza vs Colombia | 10.2% | 42.4% | **47.4%** | 31.4% | **68.6%** | 1-1 (13.3%) |
+| France vs Morocco | **50.0%** | 38.9% | 11.0% | **69.5%** | 30.5% | 2-0 (13.9%) |
+| Spain vs Belgium | **61.0%** | 31.2% | 7.8% | **76.6%** | 23.4% | 2-0 (16.8%) |
+| Norway vs England | 13.8% | **43.4%** | 42.8% | 35.5% | **64.5%** | 1-1 (13.3%) |
+| Argentina vs Switzerland | **50.7%** | 39.0% | 10.3% | **70.2%** | 29.8% | 2-0 (14.3%) |
 
-### Gráficas
+Partidos a jugarse el 9-11 de julio de 2026.
+
+## Gráficas
 
 Las gráficas se generan con:
 
 ```bash
-uv run python show_results.py --8avos --save     # probabilidades, avance, confianza, scores
-uv run python bracket_tracker.py --8avos --graphs --save  # bracket tracker
+# 16avos
+uv run python show_results.py --save
+uv run python bracket_tracker.py --graphs --save
+
+# 8avos
+uv run python show_results.py --8avos --save
+uv run python bracket_tracker.py --8avos --graphs --save
+
+# 4tos
+uv run python show_results.py --4tos --save
+uv run python bracket_tracker.py --4tos --graphs --save
 ```
 
-Los PNGs se guardan en `data/8avos_*.png` (gitignored — disponibles localmente al ejecutar los comandos).
-
-### CSV
-
-```bash
-uv run python stacking_model.py --8avos --max-date 2026-07-03
-```
-
-Guarda en `data/8avos_predictions.csv` (incluido en el repo para referencia).
+Los PNGs se guardan en `data/` con prefijo según ronda (`8avos_*.png`, `4tos_*.png`). Gitignored — disponibles localmente al ejecutar los comandos.
 
 ## Tracker en vivo — métricas duales
 
@@ -214,9 +259,7 @@ Los resultados reales se obtienen de bracketmundial2026.com (ver `data/actual_kn
 - **WC2026 boost (×3)**: partidos del Mundial actual pesan el triple en el rolling window
 - **Dixon-Coles**: corrección τ (ρ=-0.13) para scores 0-0, 1-0, 0-1, 1-1 reemplazando Poisson simple
 - Distribución predicha de empates: ~27% (real: 23.2%), gracias a `class_weight='balanced'`
-- Gráfica de confianza en `show_results.py`: línea horizontal punteada en 50%
-- `bracket_tracker.py`: JSON fallback cuando results.csv no tiene partidos recientes
-- `--8avos`: disponible en `stacking_model.py`, `show_results.py` y `bracket_tracker.py`
+- `--8avos` y `--4tos`: disponibles en `stacking_model.py`, `show_results.py` y `bracket_tracker.py`
 - Las features NLP existen para los 32 equipos pero tienen impacto limitado (ver `analisis_nlp.md`)
 - Creado con `uv init --python 3.12`
 - En Manjaro, si Playwright falla: `sudo pacman -S atk at-spi2-atk cups libdrm libxkbcommon libxcomposite libxdamage libxrandr mesa nss pango cairo gtk3`
