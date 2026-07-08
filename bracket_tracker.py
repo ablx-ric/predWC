@@ -21,21 +21,26 @@ if "--graphs" in sys.argv:
 RESULTS_URL = "https://raw.githubusercontent.com/martj42/international_results/refs/heads/master/results.csv"
 KNOCKOUT_MATCHES = "data/knockout_matches.json"
 MATCHES_8AVOS = "data/8avos_matches.json"
+MATCHES_4TOS = "data/4tos_matches.json"
 PREDICTIONS = "data/knockout_predictions.csv"
 PREDICTIONS_NLP = "data/knockout_predictions_nlp.csv"
 PREDICTIONS_8AVOS = "data/8avos_predictions.csv"
 PREDICTIONS_8AVOS_NLP = "data/8avos_predictions_nlp.csv"
+PREDICTIONS_4TOS = "data/4tos_predictions.csv"
+PREDICTIONS_4TOS_NLP = "data/4tos_predictions_nlp.csv"
 ACTUAL_KNOCKOUT = "data/actual_knockout_results.json"
 WC_YEAR = 2026
 
-LOCAL_COLOR = "#3498db"
-AWAY_COLOR = "#e67e22"
-DRAW_COLOR = "#f39c12"
-OK_COLOR = "#2ecc71"
-ERROR_COLOR = "#e74c3c"
+LOCAL_COLOR = "#1a5092"
+AWAY_COLOR = "#b22222"
+DRAW_COLOR = "#7f8c8d"
+OK_COLOR = "#27ae60"
+ERROR_COLOR = "#c0392b"
 PENDING_COLOR = "#95a5a6"
-BG_COLOR = "#f5f0eb"
+BG_COLOR = "#f8f9fa"
 CARD_BG = "#ffffff"
+
+RONDA_LABELS = {"16avos": "Octavos", "8avos": "Cuartos", "4tos": "Semifinales"}
 
 
 def normalize_team_name(name):
@@ -138,7 +143,12 @@ def _set_title(fig, title):
         pass
 
 
-def short_name(name, ml=10): return name if len(name) <= ml else name[:ml-1] + "."
+def _to_pct(x, _):
+    return f"{x:.0f}%"
+
+
+def short_name(name, ml=10):
+    return name if len(name) <= ml else name[:ml-1] + "."
 
 
 def _sc_flag(r):
@@ -152,68 +162,107 @@ def _mark(clr):
     return "[+]" if clr is True else ("[x]" if clr is False else "[ ]")
 
 
+def _setup_ax(ax):
+    ax.set_axisbelow(True)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#cccccc")
+    ax.spines["bottom"].set_color("#cccccc")
+    ax.tick_params(colors="#666666", labelsize=8)
+
+
 def draw_match_card(ax, x, y, r, card_w, card_h):
     av_s = r["av_status"]
-    border = OK_COLOR if av_s == "correct" else (ERROR_COLOR if av_s == "incorrect" else PENDING_COLOR)
+    if av_s == "correct":
+        border = OK_COLOR
+        lw = 2.2
+    elif av_s == "incorrect":
+        border = ERROR_COLOR
+        lw = 2.2
+    else:
+        border = "#d0d0d0"
+        lw = 1.2
+
     rect = FancyBboxPatch(
-        (x, y), card_w, card_h, boxstyle="round,pad=0.05", facecolor=CARD_BG,
-        edgecolor=border, linewidth=2.5 if av_s != "pending" else 1.5)
+        (x, y), card_w, card_h, boxstyle="round,pad=0.05",
+        facecolor=CARD_BG, edgecolor=border, linewidth=lw)
     ax.add_patch(rect)
 
     cx = x + card_w / 2
-    top = y + card_h - 0.015
-    gap = 0.045
+    top = y + card_h - 0.012
+    gap = 0.042
 
+    # Team names
     ax.text(cx, top, f"{short_name(r['local'])} vs {short_name(r['away'])}",
-            fontsize=5.5, fontweight="bold", ha="center", va="top", color="#2c3e50")
+            fontsize=6, fontweight="bold", ha="center", va="top",
+            color="#2c3e50")
 
-    div = top - 0.028
-    ax.plot([x + 0.02, x + card_w - 0.02], [div, div], color="#e0e0e0", linewidth=0.5)
+    # Divider line
+    div = top - 0.025
+    ax.plot([x + 0.025, x + card_w - 0.025], [div, div],
+            color="#e8e8e8", linewidth=0.5)
 
     ly = div - 0.010
 
-    # TR
+    # TR — Tiempo Regular
     if r["pred_winner"] == "Local":
         pw_n, pw_p = r["local"], r["local_win_pct"]
     elif r["pred_winner"] == "Visitante":
         pw_n, pw_p = r["away"], r["away_win_pct"]
     else:
         pw_n, pw_p = "Emp", r["draw_pct"]
+
     tr_ok = r["rt_correct"]
-    tr_c = OK_COLOR if tr_ok else (ERROR_COLOR if r["rt_status"] == "incorrect" else "#aaa")
+    tr_c = OK_COLOR if tr_ok else (ERROR_COLOR if r["rt_status"] == "incorrect" else PENDING_COLOR)
+    tr_m = _mark(tr_ok)
+
     if r["rt_status"] != "pending":
-        _, awn = result_label(r["local"], r["away"], r["actual_local_goals"], r["actual_away_goals"])
-        tr_l = f"{_mark(tr_ok)} TR {pw_n}({pw_p:.0f}%) \u2192 {awn}"
+        _, awn = result_label(r["local"], r["away"],
+                              r["actual_local_goals"], r["actual_away_goals"])
+        tr_txt = f"{tr_m} TR {pw_n}({pw_p:.0f}%) \u2192 {awn}"
     else:
-        tr_l = f"{_mark(tr_ok)} TR {pw_n}({pw_p:.0f}%)"
-    ax.text(x + 0.02, ly, tr_l, fontsize=4.8, ha="left", va="center", color=tr_c, fontfamily="monospace")
+        tr_txt = f"{tr_m} TR {pw_n}({pw_p:.0f}%)"
+
+    ax.text(x + 0.025, ly, tr_txt, fontsize=5, ha="left", va="center",
+            color=tr_c, fontfamily="monospace")
     ly -= gap
 
-    # SC
+    # SC — Score
     sc_ok = _sc_flag(r)
-    sc_c = OK_COLOR if sc_ok else (ERROR_COLOR if sc_ok is False else "#aaa")
-    pg, pa = format_score(r["pred_score"]) if r["rt_status"] != "pending" else (None, None)
+    sc_c = OK_COLOR if sc_ok else (ERROR_COLOR if sc_ok is False else PENDING_COLOR)
+    sc_m = _mark(sc_ok)
+
     if r["rt_status"] != "pending":
-        sc_l = f"{_mark(sc_ok)} SC {pg}-{pa}({r['pred_score_pct']:.0f}%) \u2192 {r['actual_local_goals']}-{r['actual_away_goals']}"
+        pg, pa = format_score(r["pred_score"])
+        sc_txt = (f"{sc_m} SC {pg}-{pa}({r['pred_score_pct']:.0f}%) \u2192 "
+                  f"{r['actual_local_goals']}-{r['actual_away_goals']}")
     else:
-        sc_l = f"{_mark(sc_ok)} SC {r['pred_score']}({r['pred_score_pct']:.0f}%)"
-    ax.text(x + 0.02, ly, sc_l, fontsize=4.8, ha="left", va="center", color=sc_c, fontfamily="monospace")
+        sc_txt = f"{sc_m} SC {r['pred_score']}({r['pred_score_pct']:.0f}%)"
+
+    ax.text(x + 0.025, ly, sc_txt, fontsize=5, ha="left", va="center",
+            color=sc_c, fontfamily="monospace")
     ly -= gap
 
-    # AV
-    av_p = r["local_advance_pct"] if r["pred_advance_label"] == "Local" else r["away_advance_pct"]
+    # AV — Avance
+    av_p = (r["local_advance_pct"] if r["pred_advance_label"] == "Local"
+            else r["away_advance_pct"])
     av_ok = r["av_correct"]
-    av_c = OK_COLOR if av_ok else (ERROR_COLOR if r["av_status"] == "incorrect" else "#aaa")
+    av_c = OK_COLOR if av_ok else (ERROR_COLOR if r["av_status"] == "incorrect" else PENDING_COLOR)
+    av_m = _mark(av_ok)
+
     if r["av_status"] != "pending":
-        av_l = f"{_mark(av_ok)} AV {r['pred_advance_name']}({av_p:.0f}%) \u2192 {r['actual_advance_name']}"
+        av_txt = (f"{av_m} AV {r['pred_advance_name']}({av_p:.0f}%) \u2192 "
+                  f"{r['actual_advance_name']}")
     else:
-        av_l = f"{_mark(av_ok)} AV {r['pred_advance_name']}({av_p:.0f}%)"
-    ax.text(x + 0.02, ly, av_l, fontsize=4.8, ha="left", va="center", color=av_c, fontfamily="monospace")
+        av_txt = f"{av_m} AV {r['pred_advance_name']}({av_p:.0f}%)"
+
+    ax.text(x + 0.025, ly, av_txt, fontsize=5, ha="left", va="center",
+            color=av_c, fontfamily="monospace")
 
 
 def plot_bracket_overview(rows, ronda="16avos"):
     fig, ax = plt.subplots(figsize=(16, 10))
-    _set_title(fig, "Bracket Tracker \u2014 Pizarra")
+    _set_title(fig, "Bracket Tracker")
     fig.patch.set_facecolor(BG_COLOR)
     ax.set_facecolor(BG_COLOR)
 
@@ -235,24 +284,40 @@ def plot_bracket_overview(rows, ronda="16avos"):
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    ax.text(0.5, 0.995,
-            f"Bracket {ronda} \u2014 Mundial 2026    |    [+]=acierto  [x]=fallo  [ ]=pendiente",
-            fontsize=8, fontweight="bold", ha="center", va="top", color="#2c3e50")
+    # Title
+    ronda_label = RONDA_LABELS.get(ronda, "")
+    ax.text(0.5, 0.997,
+            f"Bracket {ronda_label} de Final — Mundial 2026",
+            fontsize=11, fontweight="bold", ha="center", va="top",
+            color="#2c3e50")
+
+    # Subtitle
+    ax.text(0.5, 0.990,
+            "[+] = acierto    [x] = fallo    [ ] = pendiente",
+            fontsize=7, ha="center", va="top", color="#999999",
+            style="italic")
 
     # Footer stats
     av_p = [r for r in rows if r["av_status"] != "pending"]
     av_c = sum(1 for r in rows if r["av_status"] == "correct")
     rt_p = [r for r in rows if r["rt_status"] != "pending"]
     rt_c = sum(1 for r in rows if r["rt_status"] == "correct")
-    na = len(av_p); nr = len(rt_p)
+    na = len(av_p)
+    nr = len(rt_p)
+
     if nr > 0:
-        footer = (f"T.Regular: {rt_c}/{nr} ({rt_c/nr*100:.0f}%)  |  "
-                  f"Clasif: {av_c}/{na} ({av_c/na*100:.0f}%)  |  "
-                  f"Pend: {n-nr}")
+        rt_pct = rt_c / nr * 100
+        av_pct = av_c / na * 100 if na > 0 else 0
+        footer = (f"T.Regular: {rt_c}/{nr} ({rt_pct:.0f}%)  \u2502  "
+                  f"Clasif: {av_c}/{na} ({av_pct:.0f}%)  \u2502  "
+                  f"Pend: {n - nr}")
     else:
         footer = "Sin partidos jugados"
-    ax.text(0.5, 0.008, footer, fontsize=8, ha="center", va="bottom",
-            color="#555", fontweight="bold")
+
+    ax.text(0.5, 0.008, footer, fontsize=9, ha="center", va="bottom",
+            color="#555555", fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="white",
+                      edgecolor="#dddddd", linewidth=0.5))
 
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     return fig
@@ -264,10 +329,11 @@ def plot_confidence_vs_outcome(rows):
         return None
 
     n = len(played)
-    fig_w = min(3.2 * n, 14)
-    fig, axes = plt.subplots(1, n, figsize=(fig_w, 4.2))
+    fig_w = min(2.8 * n, 14)
+    fig, axes = plt.subplots(1, n, figsize=(fig_w, 4))
     _set_title(fig, "Confianza vs Resultado")
     fig.patch.set_facecolor(BG_COLOR)
+
     if n == 1:
         axes = [axes]
 
@@ -276,36 +342,35 @@ def plot_confidence_vs_outcome(rows):
     for idx, r in enumerate(played):
         ax = axes[idx]
         ax.set_facecolor(BG_COLOR)
+        _setup_ax(ax)
 
         vals = [r["local_win_pct"], r["draw_pct"], r["away_win_pct"]]
-        bars = ax.bar(["L", "E", "V"], vals, color=bar_colors, width=0.6,
-                       edgecolor="white", linewidth=1.2)
+        bars = ax.bar(["L", "E", "V"], vals, color=bar_colors, width=0.55,
+                       edgecolor="white", linewidth=0.8, zorder=3)
 
-        actual_idx = 0 if r["actual_winner"] == "Local" else (2 if r["actual_winner"] == "Visitante" else 1)
+        actual_idx = (0 if r["actual_winner"] == "Local"
+                      else (2 if r["actual_winner"] == "Visitante" else 1))
         bars[actual_idx].set_edgecolor("#2c3e50")
-        bars[actual_idx].set_linewidth(3.5)
+        bars[actual_idx].set_linewidth(3)
 
         for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1.8,
-                    f"{v:.0f}%", ha="center", fontsize=9, fontweight="bold", color="#2c3e50")
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1.5,
+                    f"{v:.0f}%", ha="center", fontsize=8.5, fontweight="bold",
+                    color="#2c3e50")
 
-        ax.axhline(y=50, color="#e74c3c", linestyle="--", linewidth=0.8, alpha=0.5)
+        ax.axhline(y=50, color=ERROR_COLOR, linestyle="--",
+                   linewidth=0.8, alpha=0.35, zorder=2)
         ax.set_ylim(0, 110)
-        ax.set_yticks([0, 25, 50, 75, 100])
-        ax.tick_params(axis="y", labelsize=7)
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(_to_pct))
 
-        # Winner + score as title
-        awn, _ = result_label(r["local"], r["away"], r["actual_local_goals"], r["actual_away_goals"])
+        # Title: winner + score
+        awn, _ = result_label(r["local"], r["away"],
+                              r["actual_local_goals"], r["actual_away_goals"])
         av_icon = "+" if r["av_correct"] else "x"
         av_c = OK_COLOR if r["av_correct"] else ERROR_COLOR
-        ax.set_title(f"{short_name(r['local'],7)}-{short_name(r['away'],7)}\n"
-                     f"{awn}  {r['actual_local_goals']}-{r['actual_away_goals']} [{av_icon}]",
+        ax.set_title(f"{short_name(r['local'], 7)} vs {short_name(r['away'], 7)}\n"
+                     f"{awn} {r['actual_local_goals']}-{r['actual_away_goals']} [{av_icon}]",
                      fontsize=8, fontweight="bold", color=av_c, linespacing=1.2)
-
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("#ccc")
-        ax.spines["bottom"].set_color("#ccc")
 
     fig.tight_layout()
     return fig
@@ -320,8 +385,8 @@ def plot_accuracy_summary(rows):
     rt_pending = sum(1 for r in rows if r["rt_status"] == "pending")
     n = len(rows)
 
-    fig, (ax_left, ax_mid, ax_right) = plt.subplots(1, 3, figsize=(13, 4.5))
-    _set_title(fig, "Accuracy \u2014 Resumen")
+    fig, (ax_left, ax_mid, ax_right) = plt.subplots(1, 3, figsize=(13, 4.2))
+    _set_title(fig, "Accuracy Summary")
     fig.patch.set_facecolor(BG_COLOR)
 
     # ── Left: Clasificación ──
@@ -330,17 +395,19 @@ def plot_accuracy_summary(rows):
     n_av = av_correct + av_incorrect
     if n_av > 0:
         av_pct = av_correct / n_av * 100
-        ax_left.text(0.5, 0.78, f"{av_pct:.0f}%", fontsize=40, fontweight="bold",
-                     ha="center", va="center",
+        ax_left.text(0.5, 0.78, f"{av_pct:.0f}%", fontsize=42,
+                     fontweight="bold", ha="center", va="center",
                      color=OK_COLOR if av_pct >= 50 else ERROR_COLOR)
-        ax_left.text(0.5, 0.55, f"{av_correct}/{n_av} aciertos", fontsize=11,
-                     ha="center", va="center", color="#555")
+        ax_left.text(0.5, 0.55, f"{av_correct}/{n_av} aciertos",
+                     fontsize=11, ha="center", va="center", color="#555555")
     else:
-        ax_left.text(0.5, 0.67, "\u2014", fontsize=40, fontweight="bold",
-                     ha="center", va="center", color=PENDING_COLOR)
-    ax_left.text(0.5, 0.30, "Clasificaci\u00f3n", fontsize=9,
-                 ha="center", va="center", color="#999", fontweight="bold", style="italic")
-    ax_left.set_xlim(0, 1); ax_left.set_ylim(0, 1)
+        ax_left.text(0.5, 0.67, "\u2014", fontsize=42,
+                     fontweight="bold", ha="center", va="center",
+                     color=PENDING_COLOR)
+    ax_left.text(0.5, 0.28, "CLASIFICACIÓN", fontsize=9, ha="center",
+                 va="center", color="#999999", fontweight="bold")
+    ax_left.set_xlim(0, 1)
+    ax_left.set_ylim(0, 1)
 
     # ── Middle: Tiempo Regular ──
     ax_mid.set_facecolor(BG_COLOR)
@@ -348,23 +415,25 @@ def plot_accuracy_summary(rows):
     n_rt = rt_correct + rt_incorrect
     if n_rt > 0:
         rt_pct = rt_correct / n_rt * 100
-        ax_mid.text(0.5, 0.78, f"{rt_pct:.0f}%", fontsize=40, fontweight="bold",
-                    ha="center", va="center",
+        ax_mid.text(0.5, 0.78, f"{rt_pct:.0f}%", fontsize=42,
+                    fontweight="bold", ha="center", va="center",
                     color=OK_COLOR if rt_pct >= 50 else ERROR_COLOR)
-        ax_mid.text(0.5, 0.55, f"{rt_correct}/{n_rt} aciertos", fontsize=11,
-                    ha="center", va="center", color="#555")
+        ax_mid.text(0.5, 0.55, f"{rt_correct}/{n_rt} aciertos",
+                    fontsize=11, ha="center", va="center", color="#555555")
     else:
-        ax_mid.text(0.5, 0.67, "\u2014", fontsize=40, fontweight="bold",
-                    ha="center", va="center", color=PENDING_COLOR)
-    ax_mid.text(0.5, 0.30, "Tiempo Regular", fontsize=9,
-                ha="center", va="center", color="#999", fontweight="bold", style="italic")
-    ax_mid.set_xlim(0, 1); ax_mid.set_ylim(0, 1)
+        ax_mid.text(0.5, 0.67, "\u2014", fontsize=42,
+                    fontweight="bold", ha="center", va="center",
+                    color=PENDING_COLOR)
+    ax_mid.text(0.5, 0.28, "TIEMPO REGULAR", fontsize=9, ha="center",
+                va="center", color="#999999", fontweight="bold")
+    ax_mid.set_xlim(0, 1)
+    ax_mid.set_ylim(0, 1)
 
-    # ── Right: stacked horizontal bar (avance) ──
+    # ── Right: stacked horizontal bar ──
     ax_right.set_facecolor(BG_COLOR)
     ax_right.axis("off")
-    y_pos = 0.5
-    bar_height = 0.35
+    y_pos = 0.55
+    bar_height = 0.3
     segments = []
     if av_correct > 0:
         segments.append((av_correct / n, OK_COLOR, f"Aciertos {av_correct}"))
@@ -372,10 +441,12 @@ def plot_accuracy_summary(rows):
         segments.append((av_incorrect / n, ERROR_COLOR, f"Fallos {av_incorrect}"))
     if av_pending > 0:
         segments.append((av_pending / n, PENDING_COLOR, f"Pendientes {av_pending}"))
+
     x_start = 0
     for width_seg, color_seg, label_seg in segments:
         ax_right.barh(y_pos, width_seg, bar_height, left=x_start,
-                      color=color_seg, edgecolor="white", linewidth=1.5)
+                      color=color_seg, edgecolor="white", linewidth=1.5,
+                      zorder=3)
         if width_seg > 0.08:
             pc = width_seg * 100
             ax_right.text(x_start + width_seg / 2, y_pos, f"{pc:.0f}%",
@@ -383,19 +454,24 @@ def plot_accuracy_summary(rows):
                           fontweight="bold", color="white")
         x_start += width_seg
 
-    ax_right.set_xlim(0, 1); ax_right.set_ylim(0, 1)
-    legend_y = 0.12
+    ax_right.set_xlim(0, 1)
+    ax_right.set_ylim(0, 1)
+
+    # Legend under stacked bar
+    legend_y = 0.18
     x_lgnd = 0.05
-    for width_seg, color_seg, label_seg in segments:
+    for _width, color_seg, label_seg in segments:
         w = 0.03
-        ax_right.barh(legend_y, w, 0.04, left=x_lgnd,
-                      color=color_seg, edgecolor="white", linewidth=1)
+        ax_right.barh(legend_y, w, 0.035, left=x_lgnd,
+                      color=color_seg, edgecolor="white", linewidth=0.8)
         ax_right.text(x_lgnd + w + 0.01, legend_y, label_seg,
-                      fontsize=8, va="center", color="#555")
+                      fontsize=7.5, va="center", color="#555555")
         x_lgnd += w + 0.12
-    ax_right.text(0.5, 0.85, "Distribuci\u00f3n global (Clasif.)", fontsize=9,
-                  ha="center", va="center", fontweight="bold", color="#555")
-    ax_right.set_xlim(0, 1); ax_right.set_ylim(0, 1)
+
+    ax_right.text(0.5, 0.86, "Distribución global", fontsize=10,
+                  ha="center", va="center", fontweight="bold", color="#555555")
+    ax_right.set_xlim(0, 1)
+    ax_right.set_ylim(0, 1)
 
     fig.tight_layout()
     return fig
@@ -409,51 +485,60 @@ def plot_score_comparison(rows):
     n = len(played)
     ncols = min(n, 2)
     nrows = (n + 1) // 2
-    fig, axes = plt.subplots(nrows, ncols, figsize=(6.5, 3.5 * nrows))
-    _set_title(fig, "Score: Predicci\u00f3n vs Real")
+    fig, axes = plt.subplots(nrows, ncols, figsize=(6.5, 3.2 * nrows))
+    _set_title(fig, "Score: Predicción vs Real")
     fig.patch.set_facecolor(BG_COLOR)
-    axes_flat = [axes] if n == 1 else axes.flatten()
+
+    if n == 1:
+        axes = [axes]
+    axes_flat = axes if n == 1 else axes.flatten()
+
     for ax in axes_flat:
         ax.set_facecolor(BG_COLOR)
+        _setup_ax(ax)
 
     for idx, r in enumerate(played):
         ax = axes_flat[idx]
         pg, pa = format_score(r["pred_score"])
-        pg = pg or 0; pa = pa or 0
+        pg = pg or 0
+        pa = pa or 0
 
-        cats = ["Pred", "Real"]
+        cats = ["Predicción", "Real"]
         l_gls = [pg, r["actual_local_goals"]]
         a_gls = [pa, r["actual_away_goals"]]
         x = np.arange(len(cats))
         w = 0.28
-        sn_loc = short_name(r["local"],6)
-        sn_awy = short_name(r["away"],6)
+        sn_loc = short_name(r["local"], 6)
+        sn_awy = short_name(r["away"], 6)
 
-        bh = ax.bar(x - w/2, l_gls, w, label=sn_loc, color=LOCAL_COLOR, edgecolor="white", linewidth=1)
-        ba = ax.bar(x + w/2, a_gls, w, label=sn_awy, color=AWAY_COLOR, edgecolor="white", linewidth=1)
+        bh = ax.bar(x - w / 2, l_gls, w, label=sn_loc,
+                    color=LOCAL_COLOR, edgecolor="white", linewidth=0.8,
+                    zorder=3)
+        ba = ax.bar(x + w / 2, a_gls, w, label=sn_awy,
+                    color=AWAY_COLOR, edgecolor="white", linewidth=0.8,
+                    zorder=3)
 
-        for bars, vals, clr in [(bh, l_gls, LOCAL_COLOR), (ba, a_gls, AWAY_COLOR)]:
+        for bars, vals, clr in [(bh, l_gls, LOCAL_COLOR),
+                                 (ba, a_gls, AWAY_COLOR)]:
             for bar, v in zip(bars, vals):
-                ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.06,
-                        str(v), ha="center", fontsize=9, fontweight="bold", color=clr)
+                ax.text(bar.get_x() + bar.get_width() / 2,
+                        bar.get_height() + 0.06,
+                        str(v), ha="center", fontsize=9,
+                        fontweight="bold", color=clr)
 
         max_g = max(max(l_gls), max(a_gls)) + 1
         ax.set_ylim(0, max(max_g, 3))
         ax.set_xticks(x)
-        ax.set_xticklabels(cats, fontsize=7)
+        ax.set_xticklabels(cats, fontsize=7.5)
         ax.set_yticks(range(0, max(max_g, 3)))
-        ax.tick_params(axis="y", labelsize=7)
 
         av_icon = "+" if r["av_correct"] else "x"
         av_c = OK_COLOR if r["av_correct"] else ERROR_COLOR
-        ax.set_title(f"{sn_loc}-{sn_awy} [{av_icon}]", fontsize=8, fontweight="bold", color=av_c)
-        ax.legend(fontsize=6, loc="upper right", framealpha=0.8)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("#ccc")
-        ax.spines["bottom"].set_color("#ccc")
+        ax.set_title(f"{sn_loc} vs {sn_awy}  [{av_icon}]",
+                     fontsize=9, fontweight="bold", color=av_c)
+        ax.legend(fontsize=6.5, loc="upper right", framealpha=0.85,
+                  facecolor="white", edgecolor="#dddddd")
 
-    # hide unused subplots
     for j in range(n, len(axes_flat)):
         axes_flat[j].axis("off")
 
@@ -471,10 +556,17 @@ def main():
     use_nlp = "--nlp" in sys.argv
     save_mode = "--save" in sys.argv
     es_8avos = "--8avos" in sys.argv
+    es_4tos = "--4tos" in sys.argv
 
-    ronda = "8avos" if es_8avos else "16avos"
-    matches_file = MATCHES_8AVOS if es_8avos else KNOCKOUT_MATCHES
-    csv_path = (PREDICTIONS_8AVOS_NLP if es_8avos else PREDICTIONS_NLP) if use_nlp else (PREDICTIONS_8AVOS if es_8avos else PREDICTIONS)
+    ronda = "4tos" if es_4tos else ("8avos" if es_8avos else "16avos")
+    matches_file = MATCHES_4TOS if es_4tos else (MATCHES_8AVOS if es_8avos else KNOCKOUT_MATCHES)
+    csv_path = (
+        PREDICTIONS_4TOS_NLP if es_4tos else
+        PREDICTIONS_8AVOS_NLP if es_8avos else PREDICTIONS_NLP
+    ) if use_nlp else (
+        PREDICTIONS_4TOS if es_4tos else
+        PREDICTIONS_8AVOS if es_8avos else PREDICTIONS
+    )
     label = "NLP" if use_nlp else "BASE"
 
     print("=" * 68)
@@ -488,12 +580,25 @@ def main():
                 print("\n  ERROR: No display available. Use --save to generate PNGs.")
                 print("    uv run python bracket_tracker.py --graphs --save")
                 sys.exit(1)
-        sns.set_style("whitegrid")
-        try:
-            plt.rcParams["font.family"] = "DejaVu Sans"
-        except Exception:
-            pass
-        plt.rcParams.update({"font.size": 11, "figure.dpi": 130})
+        sns.set_theme(style="whitegrid")
+        plt.rcParams.update({
+            "font.family": "sans-serif",
+            "font.size": 10,
+            "axes.titlesize": 13,
+            "axes.labelsize": 11,
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.grid": True,
+            "grid.alpha": 0.2,
+            "grid.linestyle": "--",
+            "figure.dpi": 150,
+            "savefig.dpi": 150,
+            "savefig.bbox": "tight",
+            "legend.frameon": True,
+            "legend.facecolor": "white",
+            "legend.edgecolor": "#cccccc",
+            "legend.fontsize": 9,
+        })
 
     with open(matches_file) as f:
         bracket = json.load(f)
@@ -697,7 +802,7 @@ def main():
 
     # ── Graphs ──
     if use_graphs:
-        prefix = f"{ronda}_" if es_8avos else ""
+        prefix = f"{ronda}_" if (es_8avos or es_4tos) else ""
         figs = [
             (f"{prefix}bracket_overview.png", plot_bracket_overview(rows, ronda)),
             (f"{prefix}accuracy_summary.png", plot_accuracy_summary(rows)),

@@ -354,14 +354,16 @@ def main():
                         help="Limitar datos de entrenamiento hasta esta fecha (YYYY-MM-DD). "
                              "Default: ayer. Ej: --max-date 2026-06-27 para excluir 16avos")
     parser.add_argument("--8avos", action="store_true", help="Predecir octavos de final (usa data/8avos_matches.json)")
+    parser.add_argument("--4tos", action="store_true", help="Predecir cuartos de final (usa data/4tos_matches.json)")
     args = parser.parse_args()
     use_nlp = args.nlp
     es_8avos = getattr(args, "8avos", False)
+    es_4tos = getattr(args, "4tos", False)
 
     global MAX_DATE
     MAX_DATE = args.max_date if args.max_date else (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    ronda = "8avos" if es_8avos else "16avos"
+    ronda = "4tos" if es_4tos else ("8avos" if es_8avos else "16avos")
     title = "STACKING MODEL + NLP" if use_nlp else "STACKING MODEL"
     print("=" * 60)
     print(f"{title} - {ronda} World Cup 2026")
@@ -558,7 +560,7 @@ def main():
     models["xgb"].fit(X_full_scaled, y, sample_weight=sw_full)
     models["mlp"].fit(X_full_scaled, y)
 
-    matches_file = "data/8avos_matches.json" if es_8avos else "data/knockout_matches.json"
+    matches_file = "data/4tos_matches.json" if es_4tos else ("data/8avos_matches.json" if es_8avos else "data/knockout_matches.json")
     output_csv = f"data/{ronda}_predictions_nlp.csv" if use_nlp else f"data/{ronda}_predictions.csv"
 
     print(f"\n[4] Predicting {ronda} matchups...")

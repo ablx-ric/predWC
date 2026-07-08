@@ -1,0 +1,22 @@
+[
+  {
+    "local": "France",
+    "visitante": "Morocco",
+    "neutral": true
+  },
+  {
+    "local": "Spain",
+    "visitante": "Belgium",
+    "neutral": true
+  },
+  {
+    "local": "Norway",
+    "visitante": "England",
+    "neutral": true
+  },
+  {
+    "local": "Argentina",
+    "visitante": "Switzerland",
+    "neutral": true
+  }
+]

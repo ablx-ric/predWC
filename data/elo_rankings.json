@@ -2,82 +2,82 @@
   {
     "rank": "1",
     "team": "Spain",
-    "rating": "2159"
+    "rating": "2177"
   },
   {
     "rank": "2",
     "team": "Argentina",
-    "rating": "2151"
+    "rating": "2156"
   },
   {
     "rank": "3",
     "team": "France",
-    "rating": "2134"
+    "rating": "2143"
   },
   {
     "rank": "4",
     "team": "England",
-    "rating": "2046"
+    "rating": "2076"
   },
   {
     "rank": "5",
-    "team": "Brazil",
-    "rating": "2031"
+    "team": "Colombia",
+    "rating": "2003"
   },
   {
     "rank": "6",
     "team": "Portugal",
-    "rating": "2013"
+    "rating": "1995"
   },
   {
     "rank": "7",
-    "team": "Colombia",
-    "rating": "2009"
+    "team": "Brazil",
+    "rating": "1993"
   },
   {
     "rank": "8",
+    "team": "Norway",
+    "rating": "1972"
+  },
+  {
+    "rank": "9",
     "team": "Netherlands",
     "rating": "1971"
   },
   {
-    "rank": "9",
-    "team": "Mexico",
-    "rating": "1943"
-  },
-  {
-    "rank": "9",
-    "team": "Switzerland",
-    "rating": "1943"
+    "rank": "10",
+    "team": "Belgium",
+    "rating": "1961"
   },
   {
     "rank": "11",
-    "team": "Norway",
-    "rating": "1934"
+    "team": "Switzerland",
+    "rating": "1949"
   },
   {
     "rank": "12",
-    "team": "Belgium",
-    "rating": "1910"
+    "team": "Morocco",
+    "rating": "1921"
   },
   {
     "rank": "13",
-    "team": "Germany",
-    "rating": "1908"
+    "team": "Mexico",
+    "rating": "1913"
   },
   {
     "rank": "14",
+    "team": "Germany",
+    "rating": "1907"
+  },
+  {
+    "rank": "15",
     "team": "Japan",
     "rating": "1888"
   },
   {
-    "rank": "15",
-    "team": "Morocco",
-    "rating": "1886"
-  },
-  {
     "rank": "16",
     "team": "Croatia",
-    "rating": "1882"
+    "rating": "1881"
   },
   {
     "rank": "17",
@@ -106,88 +106,88 @@
   },
   {
     "rank": "22",
-    "team": "Paraguay",
-    "rating": "1823"
-  },
-  {
-    "rank": "23",
     "team": "Austria",
     "rating": "1821"
   },
   {
-    "rank": "24",
+    "rank": "23",
     "team": "Senegal",
     "rating": "1816"
   },
   {
-    "rank": "25",
-    "team": "United States",
-    "rating": "1798"
+    "rank": "24",
+    "team": "Paraguay",
+    "rating": "1814"
   },
   {
-    "rank": "26",
+    "rank": "25",
     "team": "Australia",
     "rating": "1795"
   },
   {
-    "rank": "27",
+    "rank": "26",
     "team": "Ukraine",
     "rating": "1780"
   },
   {
-    "rank": "28",
+    "rank": "27",
     "team": "Russia",
     "rating": "1772"
   },
   {
-    "rank": "29",
+    "rank": "28",
     "team": "Nigeria",
     "rating": "1767"
   },
   {
-    "rank": "30",
+    "rank": "29",
     "team": "Iran",
     "rating": "1764"
   },
   {
     "rank": "30",
-    "team": "Canada",
-    "rating": "1764"
-  },
-  {
-    "rank": "32",
     "team": "Algeria",
     "rating": "1756"
   },
   {
-    "rank": "33",
-    "team": "Egypt",
+    "rank": "31",
+    "team": "United States",
     "rating": "1747"
   },
   {
-    "rank": "34",
+    "rank": "32",
     "team": "Scotland",
     "rating": "1745"
   },
   {
-    "rank": "35",
+    "rank": "33",
     "team": "Greece",
     "rating": "1744"
   },
   {
-    "rank": "36",
+    "rank": "34",
+    "team": "Egypt",
+    "rating": "1742"
+  },
+  {
+    "rank": "35",
     "team": "Serbia",
     "rating": "1734"
   },
   {
-    "rank": "37",
+    "rank": "36",
     "team": "Venezuela",
     "rating": "1733"
   },
   {
-    "rank": "38",
+    "rank": "37",
     "team": "Sweden",
     "rating": "1731"
+  },
+  {
+    "rank": "38",
+    "team": "Canada",
+    "rating": "1729"
   },
   {
     "rank": "39",
@@ -227,10 +227,10 @@
   {
     "rank": "46",
     "team": "Peru",
-    "rating": "1699"
+    "rating": "1700"
   },
   {
-    "rank": "46",
+    "rank": "47",
     "team": "Ireland",
     "rating": "1699"
   },
@@ -302,7 +302,7 @@
   {
     "rank": "61",
     "team": "Cameroon",
-    "rating": "1614"
+    "rating": "1613"
   },
   {
     "rank": "62",
@@ -362,7 +362,7 @@
   {
     "rank": "73",
     "team": "South Africa",
-    "rating": "1559"
+    "rating": "1560"
   },
   {
     "rank": "74",
@@ -407,7 +407,7 @@
   {
     "rank": "82",
     "team": "Guatemala",
-    "rating": "1505"
+    "rating": "1504"
   },
   {
     "rank": "83",
@@ -685,9 +685,9 @@
     "rating": "1293"
   },
   {
-    "rank": "138",
+    "rank": "137",
     "team": "Guyana",
-    "rating": "1292"
+    "rating": "1293"
   },
   {
     "rank": "139",
@@ -711,13 +711,13 @@
   },
   {
     "rank": "143",
-    "team": "Tajikistan",
+    "team": "Burundi",
     "rating": "1285"
   },
   {
-    "rank": "143",
-    "team": "Burundi",
-    "rating": "1285"
+    "rank": "144",
+    "team": "Tajikistan",
+    "rating": "1284"
   },
   {
     "rank": "145",
@@ -897,7 +897,7 @@
   {
     "rank": "180",
     "team": "Saint Martin",
-    "rating": "1042"
+    "rating": "1043"
   },
   {
     "rank": "181",
@@ -922,7 +922,7 @@
   {
     "rank": "185",
     "team": "Saint Lucia",
-    "rating": "1003"
+    "rating": "1004"
   },
   {
     "rank": "186",
@@ -977,7 +977,7 @@
   {
     "rank": "196",
     "team": "Dominica",
-    "rating": "934"
+    "rating": "935"
   },
   {
     "rank": "197",
@@ -1037,7 +1037,7 @@
   {
     "rank": "208",
     "team": "Bonaire",
-    "rating": "817"
+    "rating": "816"
   },
   {
     "rank": "209",
