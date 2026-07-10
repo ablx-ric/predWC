@@ -1,10 +1,41 @@
 \documentclass[aspectratio=169,10pt]{beamer}
 
-% ── Tema ──────────────────────────────────────────────────────────
+% ── Compilación (compatibilidad) ──────────────────────────────────
+% Para banderas: usar lualatex.  Si no es posible, las banderas se omiten.
+%   lualatex presentacion.tex   (recomendado)
+%   pdflatex presentacion.tex   (funciona, sin banderas)
+% ──────────────────────────────────────────────────────────────────
+\RequirePackage{iftex}
+\ifluatex
+  \usepackage{emoji}
+  \newcommand{\flag}[2][\unskip]{\emoji{flag-#2}\,#1}         % \flag{France}
+  \newcommand{\flagpair}[2]{\flag{#1}\,\flag{#2}}              % \flagpair{Germany}{Paraguay}
+\else
+  \newcommand{\flag}[2][\unskip]{#1}
+  \newcommand{\flagpair}[2]{#1 -- #2}
+\fi
+
+% ── Tema verde ────────────────────────────────────────────────────
 \usetheme{Madrid}
-\usecolortheme{default}
 \setbeamertemplate{frame numbering}[fraction]
 \setbeamercolor{background canvas}{bg=white}
+
+\definecolor{vgreen}{HTML}{1b7a3d}    % verde principal
+\definecolor{vgreenl}{HTML}{239954}   % verde claro
+\definecolor{vgreend}{HTML}{14572b}   % verde oscuro
+\definecolor{rojo}{HTML}{c0392b}
+\definecolor{verde}{HTML}{27ae60}
+\definecolor{gris}{HTML}{95a5a6}
+
+\setbeamercolor{titlelike}{fg=vgreen}
+\setbeamercolor{structure}{fg=vgreen}
+\setbeamercolor{alerted text}{fg=rojo}
+\setbeamercolor{palette primary}{fg=white, bg=vgreen}
+\setbeamercolor{palette secondary}{fg=white, bg=vgreenl}
+\setbeamercolor{palette tertiary}{fg=white, bg=vgreend}
+\setbeamercolor{block title}{fg=white, bg=vgreen}
+\setbeamercolor{block body}{fg=black, bg=vgreen!5}
+\setbeamercolor{example text}{fg=vgreen}
 
 % ── Paquetes ──────────────────────────────────────────────────────
 \usepackage[utf8]{inputenc}
@@ -12,27 +43,26 @@
 \usepackage{booktabs}
 \usepackage{multicol}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, shapes, fit}
+\usetikzlibrary{arrows.meta, positioning, shapes, fit, backgrounds}
 \usepackage{graphicx}
 \usepackage{amsmath, amssymb}
 \usepackage{caption}
+\usepackage{array}
 
 % ── Macros ────────────────────────────────────────────────────────
-\definecolor{azul}{HTML}{1a5092}
-\definecolor{rojo}{HTML}{b22222}
-\definecolor{verde}{HTML}{27ae60}
-\definecolor{gris}{HTML}{7f8c8d}
-\setbeamercolor{titlelike}{fg=azul}
-\setbeamercolor{structure}{fg=azul}
-\setbeamercolor{alerted text}{fg=rojo}
-\setbeamercolor{palette primary}{fg=white, bg=azul}
-\setbeamercolor{palette secondary}{fg=white, bg=azul!80}
-\setbeamercolor{palette tertiary}{fg=white, bg=azul!60}
-
 \newcommand{\pct}[1]{\textbf{#1\%}}
-\newcommand{\cmark}{\textcolor{verde}{$\cmark$}}
-\newcommand{\xmark}{\textcolor{rojo}{$\times$}}
+\newcommand{\cmark}{\textcolor{verde}{\ensuremath{\checkmark}}}
+\newcommand{\xmark}{\textcolor{rojo}{\ensuremath{\times}}}
 \newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\country}[2]{\flag{#1}#2}
+\newcommand{\pair}[2]{\flagpair{#1}{#2}}
+
+\newcommand{\safeincludegraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \fbox{\parbox[c][0.4\textheight][c]{0.85\linewidth}{\centering\scriptsize
+      Gráfica no disponible\\\detokenize{#2}}}%
+  }%
+}
 
 % ── Documento ─────────────────────────────────────────────────────
 \begin{document}
@@ -41,128 +71,180 @@
 \begin{frame}[plain]
   \centering
   \vfill
-  {\Huge\bfseries\color{azul} predWC}\\[0.3cm]
-  {\Large World Cup 2026 --- Knockout Predictor}\\[1cm]
-  {\small Modelo stacking para predicci\'on de resultados\\[0.2cm]
-   en fase eliminatoria del Mundial 2026}\\[1.5cm]
+  {\Huge\bfseries\color{vgreen} predWC}\\[0.2cm]
+  {\large Predicción de Resultados del Mundial 2026\\[0.15cm]
+   con Stacking Ensemble y Dixon-Coles}\\[0.8cm]
+  {\small
+   \begin{tabular}{c}
+     \code{uv run stacking\_model.py --4tos} \\[0.2cm]
+     \code{github.com:elable947/predWC.git}
+   \end{tabular}
+  }\\[1.2cm]
   {\footnotesize \today}
   \vfill
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Motivaci\'on y problema}
+\begin{frame}{Índice}
+  \tableofcontents
+\end{frame}
+
+\section{Motivación y Datos}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Motivación y problema}
   \textbf{Problema:} predecir el ganador de cada partido eliminatorio
-  del Mundial 2026 (48 selecciones, 3 rondas KO).\\[0.4cm]
+  del Mundial 2026 (48 selecciones, 3 rondas KO).\\[0.3cm]
 
-  \textbf{Desaf\'ios:}
-  \begin{itemize}
-    \item Datos limitados: solo partidos previos entre selecciones
-    \item Desbalance de clases: empates son menos frecuentes (\~{}23\%)
-    \item Sin leakage temporal: no usar informaci\'on futura
-    \item Scores exactos necesarios para visualizaci\'on
-  \end{itemize}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Desafíos:}
+      \begin{itemize}\footnotesize
+        \item Datos limitados entre selecciones
+        \item Desbalance de clases ($\sim$23\% empates)
+        \item Sin \emph{leakage} temporal
+        \item Scores exactos para visualización
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Solución:}
+      \begin{itemize}\footnotesize
+        \item Stacking ensemble (RF+XGB+MLP$\to$LR)
+        \item Dixon-Coles $\tau$ para scores
+        \item Split temporal 80/20
+        \item 8\,204 partidos históricos
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
   \vspace{0.3cm}
-  \textbf{Soluci\'on:} stacking ensemble + Dixon-Coles,
-  entrenado con split temporal 80/20 sobre 8\,204 partidos (2018--2026).
+  \begin{exampleblock}{Objetivo}
+    Accuracy $>$ 60\% en fase eliminatoria, con calibración confiable
+    para apoyar análisis táctico.
+  \end{exampleblock}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Pipeline de datos}
+\begin{frame}{Fuentes de datos}
+
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{Datos principales}
+      \begin{itemize}\small
+        \item \alert{8\,204} partidos internacionales (2018--2026)
+        \item Fuente: \code{martj42/international\_results}
+        \item 244 selecciones con ELO estático
+        \item \alert{103k+} registros ELO históricos
+        \item Pesos por torneo (Mundial=5, Friendly=1)
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{tikzpicture}[
+          box/.style={draw, rounded corners, fill=vgreen!12,
+                      minimum width=2.2cm, minimum height=0.7cm,
+                      align=center, font=\scriptsize},
+          arrow/.style={-{Stealth[scale=0.7]}, thick} ]
+        \node[box] (r) {results.csv};
+        \node[box, below=0.3cm of r] (e) {ELO ratings};
+        \node[box, below=0.3cm of e] (f) {25 features};
+        \draw[arrow] (r) -- (e);
+        \draw[arrow] (e) -- (f);
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3cm}
+  \textbf{NLP opcional:} news embeddings (PCA $\to$ 11 comp.) +
+  YouTube sentiment $\to$ 24 features extra.
+  \textcolor{gris}{(impacto limitado sin datos históricos)}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Ingeniería de características (25 features)}
+
+  \begin{columns}[T]
+    \begin{column}{0.33\textwidth}
+      \textbf{Local (8)}
+      \begin{itemize}\tiny
+        \item Partidos jugados
+        \item Goles a favor $\varnothing$
+        \item Goles en contra $\varnothing$
+        \item Dif. de goles $\varnothing$
+        \item \% Victoria / Empate / Derrota
+        \item Forma reciente
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \textbf{Visitante (8)}
+      \begin{itemize}\tiny
+        \item \emph{(mismas 8 métricas)}
+      \end{itemize}
+      \vspace{0.3cm}
+      \textbf{ELO (4)}
+      \begin{itemize}\tiny
+        \item ELO local, visitante
+        \item $\Delta$ELO
+        \item $\Delta$goal diff
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \textbf{Contexto (5)}
+      \begin{itemize}\tiny
+        \item H2H wins / draws
+        \item Peso del torneo
+        \item Localía / neutral
+      \end{itemize}
+      \vspace{0.1cm}
+      \textbf{Ponderación:}\\[0.05cm]
+      \begin{tikzpicture}[font=\tiny]
+        \draw[thick, vgreen] (0,0) -- (2.5,0);
+        \foreach \x/\l in {0/10,1/8,2/6,3/4,4/2}
+          \draw (\x*0.5,0.05) -- (\x*0.5,-0.05)
+                node[below, font=\tiny] {\l};
+        \node[above, font=\tiny] at (1.25,0.1) {últimos 10};
+      \end{tikzpicture}\\[0.1cm]
+      \alert{WC2026 $\times$3} en rolling stats
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Modelo}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Arquitectura: Stacking Ensemble}
   \centering
   \begin{tikzpicture}[
-      node distance=0.6cm and 1.8cm,
-      box/.style={draw, rounded corners, minimum width=2.2cm,
-                  minimum height=0.7cm, align=center, font=\scriptsize},
-      arrow/.style={-{Stealth[scale=0.8]}, thick} ]
-    \node[box, fill=azul!15] (results)   {results.csv\\ 8\,204 partidos};
-    \node[box, fill=azul!15, right=of results] (elo)     {ELO ratings\\ 244 equipos};
-    \node[box, fill=azul!15, right=of elo] (elohist) {ELO history\\ 103k registros};
-    \node[box, fill=azul!15, below=of elo] (h2h)    {Head-to-head\\ \'ultimos 5};
-    \node[box, fill=verde!15, right=of elohist] (features) {25 features\\ por partido};
-    \node[box, fill=verde!15, below=of features] (nlp) {+ 24 NLP\\ (opcional)};
-
-    \draw[arrow] (results) -- (elo);
-    \draw[arrow] (elo)     -- (elohist);
-    \draw[arrow] (results.south) |- (h2h);
-    \draw[arrow] (elohist)  -- (features);
-    \draw[arrow] (h2h)     -| (features);
-    \draw[arrow] (features) -- (nlp);
-  \end{tikzpicture}
-  \vspace{0.3cm}
-
-  \begin{itemize}
-    \item Fuente: \texttt{github.com/martj42/international\_results}
-    \item ELO est\'atico + historial desde \texttt{eloratings.net}
-    \item NLP opcional: noticias + YouTube sentiment
-  \end{itemize}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Ingenier\'ia de caracter\'isticas (25 features)}
-  \begin{multicols}{2}
-    \textbf{Equipo local (8):}
-    \begin{itemize}\small
-      \[]{\footnotesize Partidos jugados (rolling)}
-      \item Promedio goles a favor / en contra
-      \item Diferencia de goles media
-      \item \% victorias, empates, derrotas
-      \item Forma reciente (\'ultimos 5)
-    \end{itemize}
-
-    \textbf{Equipo visitante (8):} {\small mismas 8 m\'etricas}
-  \end{multicols}
-
-  \textbf{ELO y derivadas (4):}
-  \[
-  \text{ELO local},\quad \text{ELO visitante},\quad
-  \Delta\text{ELO},\quad \Delta\text{goal diff}
-  \]
-
-  \textbf{Contexto (5):}
-  victorias/empates H2H, peso del torneo, local\'ia\\[0.2cm]
-
-  \textbf{Ponderaci\'on temporal:}
-  \begin{itemize}\small
-    \item Ventana: \'ultimos 10 partidos
-    \item Decaimiento exponencial: \emph{half-life} 180 d\'ias
-    \item Peso por ELO del rival: $\text{weight} \propto \text{ELO}_{\text{rival}}$
-    \item \alert{WC2026 boost $\times 3$}: partidos del torneo actual
-  \end{itemize}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Modelo: Stacking Ensemble}
-  \centering
-  \begin{tikzpicture}[
-      font=\scriptsize,
-      feat/.style={draw, rounded corners, fill=azul!15,
-                   minimum width=1.8cm, minimum height=0.5cm},
-      model/.style={draw, rounded corners, fill=verde!15,
-                    minimum width=1.6cm, minimum height=0.6cm},
-      probs/.style={draw, rounded corners, fill=orange!15,
-                    minimum width=1.2cm, minimum height=0.5cm},
-      meta/.style={draw, rounded corners, fill=rojo!15,
+      font=\footnotesize,
+      feat/.style={draw, rounded corners, fill=vgreen!15, align=center,
                    minimum width=1.8cm, minimum height=0.6cm},
-      arrow/.style={-{Stealth[scale=0.7]}, thick} ]
+      model/.style={draw, rounded corners, fill=verde!15, align=center,
+                    minimum width=1.7cm, minimum height=0.7cm},
+      probs/.style={draw, rounded corners, fill=orange!12, align=center,
+                    minimum width=1.2cm, minimum height=0.5cm},
+      meta/.style={draw, rounded corners, fill=rojo!12, align=center,
+                   minimum width=1.8cm, minimum height=0.7cm},
+      arrow/.style={-{Stealth[scale=0.75]}, thick} ]
 
-    \node[feat] (feat) {25 features\\ (scaled)};
+    \node[feat] (feat) {\textbf{25 features}\\ StandardScaler};
 
-    \node[model, below left=0.5cm and 0.6cm of feat] (rf)
-      {RandomForest\\ 300 trees, depth 12};
-    \node[model, below=0.5cm of feat] (xgb)
-      {XGBoost\\ 300 trees, depth 6};
-    \node[model, below right=0.5cm and 0.6cm of feat] (mlp)
-      {MLP\\ (25, 12)};
+    \node[model, below left=0.6cm and 0.6cm of feat] (rf)
+      {RandomForest\\ \tiny 300 árboles, depth 12};
+    \node[model, below=0.6cm of feat] (xgb)
+      {XGBoost\\ \tiny 300 árboles, depth 6, $\eta$=0.03};
+    \node[model, below right=0.6cm and 0.6cm of feat] (mlp)
+      {MLP \\ \tiny (25\,$\to$\,12) ReLU, $\alpha$=0.003};
 
-    \node[probs, below=0.4cm of rf] (prf) {$p(L), p(E), p(V)$};
-    \node[probs, below=0.4cm of xgb] (pxgb) {$p(L), p(E), p(V)$};
-    \node[probs, below=0.4cm of mlp] (pmlp) {$p(L), p(E), p(V)$};
+    \node[probs, below=0.35cm of rf] (prf)  {$p(L),\,p(E),\,p(V)$};
+    \node[probs, below=0.35cm of xgb] (pxgb) {$p(L),\,p(E),\,p(V)$};
+    \node[probs, below=0.35cm of mlp] (pmlp) {$p(L),\,p(E),\,p(V)$};
 
-    \node[meta, below=0.5cm of pxgb] (meta) {LogisticRegression\\ $C{=}0.1$, balanced};
+    \node[meta, below=0.5cm of pxgb] (meta)
+      {\textbf{LogisticRegression}\\ \tiny $C=0.1$, class\_weight='balanced'};
 
-    \node[draw, rounded corners, fill=azul!30,
-          minimum width=2cm, minimum height=0.6cm,
-          below=0.5cm of meta] (pred) {\textbf{Predicci\'on}\\ L / E / V};
+    \node[draw, rounded corners, fill=vgreen!30, align=center,
+          minimum width=2.2cm, minimum height=0.7cm,
+          below=0.5cm of meta] (pred)
+          {\large\bfseries Local \;|\; Empate \;|\; Visitante};
 
     \draw[arrow] (feat) -- (rf);   \draw[arrow] (rf)  -- (prf);
     \draw[arrow] (feat) -- (xgb);  \draw[arrow] (xgb) -- (pxgb);
@@ -175,112 +257,146 @@
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Entrenamiento y validaci\'on temporal}
-  \textbf{Estrategia:} split temporal 80/20 --- \alert{sin leakage}
+\begin{frame}{Entrenamiento y validación temporal}
 
-  \[
-  \underbrace{2018\text{--}2024}_{\text{80\% train}} \quad
-  \underbrace{2024\text{--}2026}_{\text{20\% test}}
-  \]
+  \begin{exampleblock}{Split temporal 80/20 --- sin \emph{leakage}}
+    \[
+    \underbrace{\text{2018 -- nov 2024}}_{\text{80\% train (6\,563)}} \quad
+    \underbrace{\text{nov 2024 -- jul 2026}}_{\text{20\% test (1\,641)}}
+    \]
+  \end{exampleblock}
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
-      \textbf{Balance de clases:}
+      \textbf{Balance de clases}
       \begin{itemize}\small
-        \item \code{class\_weight='balanced'} en RF y meta-LR
+        \item \code{class\_weight='balanced'} (RF, meta-LR)
         \item \code{sample\_weight} en XGBoost
         \item Empates predichos: $\sim$27\% (real: 23.2\%)
       \end{itemize}
     \end{column}
     \begin{column}{0.48\textwidth}
-      \textbf{Reentrenamiento final:}
+      \textbf{Pipeline final}
       \begin{itemize}\small
-        \item Validaci\'on sobre $\sim$1\,640 partidos
-        \item Retrain en \textbf{todos} los datos (8\,204)
-        \item Predicci\'on con modelo final
+        \item Validación sobre 1\,641 partidos
+        \item Retrain en \alert{todos} los datos (8\,204)
+        \item Predicción con modelo final + Dixon-Coles
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3cm}
+  \begin{block}{WC2026 Boost $\times$3}
+    Partidos del Mundial 2026 reciben peso triple en rolling stats
+    para adaptar el modelo al torneo actual.
+  \end{block}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Rendimiento en validación}
+  \centering
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Métrica} & \textbf{Valor} & \textbf{Benchmark} \\
+    \midrule
+    Accuracy            & \pct{61.89} & 33\% (azar) \\
+    Log-loss            & 0.8185      & 1.099 (azar) \\
+    F1 macro            & 0.5911      & --- \\
+    MCC                 & 0.4147      & 0 (azar) \\
+    Top-2 accuracy      & $\sim$87\%  & --- \\
+    ECE (calibración)   & 0.0254      & 0 (perfecto) \\
+    \bottomrule
+  \end{tabular}
+
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \begin{column}{0.45\textwidth}
+      {\small\textbf{Por modelo (base accuracy)}}
+      \begin{itemize}\tiny
+        \item RF: \pct{63.0}
+        \item XGB: \pct{62.5}
+        \item MLP: \pct{64.8}
+        \item \textbf{Stacking: \pct{61.9}} (mejor calibración)
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.52\textwidth}
+      {\small\textbf{Interpretación}}
+      \begin{itemize}\tiny
+        \item El stacking favorece calibración y F1 sobre accuracy
+        \item MLP individual tiene más overfit; el meta-modelo lo regula
+        \item ECE bajo ($<$0.03) indica probabilidades confiables
       \end{itemize}
     \end{column}
   \end{columns}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Rendimiento en validaci\'on temporal}
-  \centering
-  \begin{tabular}{lcc}
-    \toprule
-    \textbf{M\'etrica} & \textbf{Valor} & \textbf{Benchmark} \\
-    \midrule
-    Accuracy            & \pct{61.89} & 33\% (azar) \\
-    Log-loss            & 0.8185      & 1.099 (azar) \\
-    F1 macro            & 0.5911      & --- \\
-    MCC                 & 0.4147      & 0 (azar) \\
-    Top-2 accuracy      & $\sim$87\% & --- \\
-    ECE (calibraci\'on) & 0.0254      & 0 (perfecto) \\
-    \bottomrule
-  \end{tabular}
+\begin{frame}{Dixon-Coles: Predicción de scores}
 
-  \vspace{0.3cm}
-  {\small
-  \textbf{Per-modelo (base accuracy):}
-  \[
-  \text{RF } 63.0\% \quad
-  \text{XGB } 62.5\% \quad
-  \text{MLP } 64.8\% \quad
-  \textbf{Stacking } 61.9\%
-  \]
-  El stacking mejora calibraci\'on y F1, no necesariamente accuracy.
-  }
-\end{frame}
+  \textbf{Problema:} Poisson subestima empates 0-0 y 1-1.
 
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Dixon-Coles: Predicci\'on de scores exactos}
-  \textbf{Motivaci\'on:} Poisson simple subestima empates 0-0 y 1-1.\\[0.3cm]
-
-  \textbf{Soluci\'on:} correcci\'on $\tau$ (Dixon \& Coles, 1997):
+  \vspace{0.2cm}
+  \textbf{Solución:} corrección $\tau$ (Dixon \& Coles, 1997):
 
   \[
-  P(X{=}x, Y{=}y) = \tau_{\rho}(x,y)\;
+  P(X{=}x, Y{=}y) \;=\; \tau_{\rho}(x,y)\;
   \frac{e^{-\lambda}\lambda^x}{x!}\;
   \frac{e^{-\mu}\mu^y}{y!}
   \]
 
-  con $\rho = -0.13$ y correcciones para $(0,0),(1,0),(0,1),(1,1)$.\\[0.3cm]
+  \begin{itemize}
+    \item $\rho = -0.13$: corrige correlación en scores bajos
+    \item $\tau$ aplica a $(0,0), (1,0), (0,1), (1,1)$
+    \item $\lambda/\mu = 10^{\Delta\text{ELO}/400}$ desde ELO
+  \end{itemize}
 
-  \textbf{Proceso:}
-  \begin{enumerate}\small
-    \item Calcular $\lambda,\mu$ desde ELO:
-          $\displaystyle\frac{\lambda}{\mu} = 10^{\Delta\text{ELO}/400}$
-    \item Construir matriz $11\times11$ con PMF anal\'itica
-    \item Aplicar $\tau$ y renormalizar
-    \item Monte Carlo: 50\,000 muestras $\to$ ranking de scores
-  \end{enumerate}
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Matriz analítica}
+      \begin{itemize}\small
+        \item PMF Poisson $11\times11$
+        \item $\tau$ + renormalización
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Monte Carlo}
+      \begin{itemize}\small
+        \item 50\,000 muestras
+        \item Ranking de scores
+        \item Goal ratio desde ELO
+      \end{itemize}
+    \end{column}
+  \end{columns}
 \end{frame}
 
+\section{Resultados}
+
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Resultados: Octavos de Final (16avos)}
+\begin{frame}{Octavos de Final (16avos)}
   \centering
-  {\small
-  \begin{tabular}{lccclc}
+  {\fontsize{5.5}{7}\selectfont
+  \begin{tabular}{lcccc}
     \toprule
-    \textbf{Partido} & \textbf{TR} & \textbf{SC} & \textbf{AV} \\
+    \textbf{Partido} & \textbf{TR} & \textbf{Score} & \textbf{AV} \\
     \midrule
-    Germany vs Paraguay   & \xmark & \xmark & \xmark \\
-    France vs Sweden      & \cmark & \xmark & \cmark \\
-    South Africa vs Canada & \cmark & \xmark & \cmark \\
-    Netherlands vs Morocco & \xmark & \xmark & \xmark \\
-    Portugal vs Croatia   & \cmark & \xmark & \cmark \\
-    Spain vs Austria      & \cmark & \xmark & \cmark \\
-    US vs Bosnia          & \cmark & \xmark & \cmark \\
-    Belgium vs Senegal    & \xmark & \xmark & \xmark \\
-    Brazil vs Japan       & \cmark & \xmark & \cmark \\
-    Ivory Coast vs Norway & \cmark & \xmark & \cmark \\
-    Mexico vs Ecuador     & \xmark & \xmark & \xmark \\
-    England vs Congo DR   & \cmark & \xmark & \cmark \\
-    Argentina vs Cape Verde & \cmark & \xmark & \cmark \\
-    Australia vs Egypt    & \xmark & \cmark & --- \\
-    Switzerland vs Algeria & \cmark & \xmark & \cmark \\
-    Colombia vs Ghana     & \cmark & \xmark & \cmark \\
+    \pair{Germany}{Paraguay}   & \xmark & 1-0 $\to$ 1-1 & \xmark \\
+    \pair{France}{Sweden}      & \cmark & 2-0 $\to$ 3-0 & \cmark \\
+    \pair{South Africa}{Canada}& \cmark & 1-1 $\to$ 0-1 & \cmark \\
+    \pair{Netherlands}{Morocco}& \xmark & 1-0 $\to$ 1-1 & \xmark \\
+    \pair{Portugal}{Croatia}   & \cmark & 1-1 $\to$ 2-1 & \cmark \\
+    \pair{Spain}{Austria}      & \cmark & 2-0 $\to$ 3-0 & \cmark \\
+    \pair{United States}{Bosnia-Herzegovina} & \cmark & 1-0 $\to$ 2-0 & \cmark \\
+    \pair{Belgium}{Senegal}    & \xmark & 1-1 $\to$ 3-2 & \xmark \\
+    \pair{Brazil}{Japan}       & \cmark & 1-0 $\to$ 2-1 & \cmark \\
+    \pair{Ivory Coast}{Norway} & \cmark & 0-2 $\to$ 1-2 & \cmark \\
+    \pair{Mexico}{Ecuador}     & \xmark & 1-1 $\to$ 2-0 & \xmark \\
+    \pair{England}{Congo DR}   & \cmark & 2-0 $\to$ 2-1 & \cmark \\
+    \pair{Argentina}{Cape Verde}& \cmark & 2-0 $\to$ 3-2 & \cmark \\
+    \pair{Australia}{Egypt}    & \xmark & \textbf{1-1} $\to$ 1-1 & -- \\
+    \pair{Switzerland}{Algeria}& \cmark & 1-0 $\to$ 2-0 & \cmark \\
+    \pair{Colombia}{Ghana}     & \cmark & 2-0 $\to$ 1-0 & \cmark \\
     \midrule
     \textbf{Total} & \pct{69} & \pct{6} & \pct{73} \\
     \bottomrule
@@ -289,153 +405,186 @@
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Resultados: Cuartos de Final (8avos)}
+\begin{frame}{Cuartos de Final (8avos)}
   \centering
-  {\small
-  \begin{tabular}{lccclc}
+  {\fontsize{6}{7.5}\selectfont
+  \begin{tabular}{lcccc}
     \toprule
-    \textbf{Partido} & \textbf{TR} & \textbf{SC} & \textbf{AV} \\
+    \textbf{Partido} & \textbf{TR} & \textbf{Score} & \textbf{AV} \\
     \midrule
-    Paraguay vs France    & \cmark & \xmark & \cmark \\
-    Canada vs Morocco     & \cmark & \xmark & \cmark \\
-    Portugal vs Spain     & \cmark & \xmark & \cmark \\
-    US vs Belgium         & \cmark & \xmark & \cmark \\
-    Brazil vs Norway      & \xmark & \xmark & \xmark \\
-    Mexico vs England     & \xmark & \xmark & \cmark \\
-    Argentina vs Egypt    & \cmark & \xmark & \cmark \\
-    Switzerland vs Colombia & \xmark & \xmark & \xmark \\
+    \pair{Paraguay}{France}    & \cmark & 0-2 $\to$ 0-1 & \cmark \\
+    \pair{Canada}{Morocco}     & \cmark & 1-1 $\to$ 0-3 & \cmark \\
+    \pair{Portugal}{Spain}     & \cmark & 1-1 $\to$ 0-1 & \cmark \\
+    \pair{United States}{Belgium} & \cmark & 1-1 $\to$ 1-4 & \cmark \\
+    \pair{Brazil}{Norway}      & \xmark & 1-1 $\to$ 1-2 & \xmark \\
+    \pair{Mexico}{England}     & \xmark & 1-1 $\to$ 2-3 & \cmark \\
+    \pair{Argentina}{Egypt}    & \cmark & 2-0 $\to$ 3-2 & \cmark \\
+    \pair{Switzerland}{Colombia}& \xmark & 1-1 $\to$ 0-0 & \xmark \\
     \midrule
     \textbf{Total} & \pct{62} & \pct{0} & \pct{75} \\
     \bottomrule
   \end{tabular}
   }
 
-  \vspace{0.4cm}
-  {\small
-  \textbf{Partidos cr\'iticos fallados:}
+  \vspace{0.2cm}
+  {\scriptsize
+  \textbf{Partidos críticos fallados:}
   \begin{itemize}
-    \item Brazil vs Norway: modelo daba Empate 49\% $\to$ Norway gan\'o 1-2
-    \item Switzerland vs Colombia: Colombia favorito 69\% $\to$ Suiza avanz\'o en penales
+    \item \pair{Brazil}{Norway}: modelo daba Empate 49\% $\to$ Norway 1-2
+    \item \pair{Switzerland}{Colombia}: Colombia favorito 69\% $\to$ Suiza en penales
   \end{itemize}
   }
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Pron\'ostico: Semifinales (4tos)}
+\begin{frame}{Pronóstico: Semifinales (4tos)}
   \centering
-  {\small
   \begin{tabular}{lcccc}
     \toprule
     \textbf{Partido} & \textbf{Local} & \textbf{Empate} & \textbf{Visitante} & \textbf{Score ML} \\
     \midrule
-    France   vs Morocco   & \pct{50.0} & \pct{38.9} & \pct{11.0} & 2-0 (13.9\%) \\
-    Spain    vs Belgium   & \pct{61.0} & \pct{31.2} & \pct{7.8}  & 2-0 (16.8\%) \\
-    Norway   vs England   & \pct{13.8} & \pct{43.4} & \pct{42.8} & 1-1 (13.3\%) \\
-    Argentina vs Swiss    & \pct{50.7} & \pct{39.0} & \pct{10.3} & 2-0 (14.3\%) \\
+    \pair{France}{Morocco}   & \pct{50.0} & \pct{38.9} & \pct{11.0} & 2-0 (13.9\%) \\
+    \pair{Spain}{Belgium}    & \pct{61.0} & \pct{31.2} & \pct{7.8}  & 2-0 (16.8\%) \\
+    \pair{Norway}{England}   & \pct{13.8} & \pct{43.4} & \pct{42.8} & 1-1 (13.3\%) \\
+    \pair{Argentina}{Switzerland} & \pct{50.7} & \pct{39.0} & \pct{10.3} & 2-0 (14.3\%) \\
     \bottomrule
   \end{tabular}
-  }
 
   \vspace{0.3cm}
-  {\small
-  \begin{tabular}{lcc}
-    \toprule
-    \textbf{Partido} & \textbf{$\lambda$ local} & \textbf{$\lambda$ visit.} \\
-    \midrule
-    France   vs Morocco   & 2.06 & 0.67 \\
-    Spain    vs Belgium   & 2.29 & 0.44 \\
-    Norway   vs England   & 1.22 & 1.51 \\
-    Argentina vs Swiss    & 2.09 & 0.64 \\
-    \bottomrule
-  \end{tabular}
-  }
+  \begin{block}{Goles esperados (Dixon-Coles)}
+    \centering
+    \begin{tabular}{lcc}
+      \toprule
+      \textbf{Partido} & \textbf{$\boldsymbol{\lambda}$ local} & \textbf{$\boldsymbol{\lambda}$ visit.} \\
+      \midrule
+      \pair{France}{Morocco}   & 2.06 & 0.67 \\
+      \pair{Spain}{Belgium}    & 2.29 & 0.44 \\
+      \pair{Norway}{England}   & 1.22 & 1.51 \\
+      \pair{Argentina}{Switzerland} & 2.09 & 0.64 \\
+      \bottomrule
+    \end{tabular}
+  \end{block}
 
-  \vspace{0.3cm}
+  \vspace{0.15cm}
   Partidos a jugarse el 9--11 de julio de 2026.
 \end{frame}
 
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Tracker en vivo: bracket\_tracker.py}
-  \textbf{M\'etricas duales por partido:}
+\section{Tracker y Visualización}
 
-  \vspace{0.2cm}
-  \begin{tabular}{lll}
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Tracker en vivo: \code{bracket\_tracker.py}}
+  \centering
+  \textbf{Métricas duales por partido:}
+  \vspace{0.15cm}
+
+  \begin{tabular}{llc}
     \toprule
-    \textbf{M\'etrica} & \textbf{Mide} & \textbf{Ejemplo} \\
+    \textbf{Métrica} & \textbf{Mide} & \textbf{Acumulado} \\
     \midrule
-    T.Regular (TR) & Ganador en 90' (L/E/V) & Alemania 64\% $\to$ Empate \xmark \\
-    Marcador (SC)  & Score exacto            & 1-1 $\to$ 1-1 \cmark \\
-    Clasificaci\'on (AV) & Avance (incl. penales) & Alemania 77\% $\to$ Paraguay \xmark \\
+    T.Regular (TR) & Ganador en 90' (L/E/V) & 16avos: \pct{69} \quad 8avos: \pct{62} \\
+    Marcador (SC)  & Score exacto            & 16avos: \pct{6}  \quad 8avos: \pct{0} \\
+    Clasificación (AV) & Avance (incl. penales) & 16avos: \pct{73}  \quad 8avos: \pct{75} \\
     \bottomrule
   \end{tabular}
 
-  \vspace{0.4cm}
-  \textbf{Funcionalidades:}
-  \begin{itemize}\small
-    \item Tabla textual + 4 gr\'aficas profesionales
-    \item Fallback JSON cuando results.csv no tiene el partido
-    \item Auto-detecci\'on de avance si hay ganador claro en 90'
-    \item Soporta \code{--8avos}, \code{--4tos}, \code{--graphs}, \code{--save}
-  \end{itemize}
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Funcionalidades}
+      \begin{itemize}\tiny
+        \item Tabla textual + 4 gráficas
+        \item Fallback JSON
+        \item Auto-detección de avance
+        \item \code{--8avos}, \code{--4tos}, \code{--graphs}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Ejemplo de salida:}
+      {\fontsize{4.5}{6}\selectfont
+      \begin{verbatim}
+Germany vs Paraguay   TR Germany(44%)→Empate [x]
+                      SC 1-0→1-1             [x]
+                      AV Germany(77%)→Paraguay [x]
+      \end{verbatim}
+      }
+    \end{column}
+  \end{columns}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Visualizaciones}
+\begin{frame}{Visualizaciones generadas}
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{data/4tos_advancement.png}\\
-      {\small Avance a Semifinales}
+      \safeincludegraphics[width=\textwidth]{data/4tos_advancement.png}\\
+      {\tiny Avance a Semifinales}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{data/4tos_confidence.png}\\
-      {\small Confianza del modelo}
+      \safeincludegraphics[width=\textwidth]{data/4tos_confidence.png}\\
+      {\tiny Confianza del modelo}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{data/4tos_poisson_scores.png}\\
-      {\small Dixon-Coles scores}
+      \safeincludegraphics[width=\textwidth]{data/4tos_poisson_scores.png}\\
+      {\tiny Dixon-Coles scores}
     \end{column}
   \end{columns}
+
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.33\textwidth}
+      \centering
+      \safeincludegraphics[width=\textwidth]{data/4tos_probabilities.png}\\
+      {\tiny Probabilidades L/E/V}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \centering
+      \safeincludegraphics[width=\textwidth]{data/4tos_bracket_overview.png}\\
+      {\tiny Pizarra de resultados}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \centering
+      \safeincludegraphics[width=\textwidth]{data/4tos_accuracy_summary.png}\\
+      {\tiny Resumen de aciertos}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Conclusiones}
+  \begin{exampleblock}{Logros}
+    \begin{itemize}
+      \item Stacking ensemble con \pct{61.89} accuracy y F1 macro 0.59
+      \item Resultados sólidos en 16avos (TR \pct{69}) y 8avos (AV \pct{75})
+      \item Dixon-Coles captura mejor la distribución de scores
+      \item Pipeline portable: \code{uv run python stacking\_model.py}
+    \end{itemize}
+  \end{exampleblock}
+
   \vspace{0.3cm}
-  {\small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Trabajo futuro}
+      \begin{itemize}\small
+        \item NLP con datos históricos
+        \item Calibración Platt
+        \item Datos de alineaciones
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Enlaces}
+      \begin{itemize}\small
+        \item \code{github.com:elable947/predWC.git}
+        \item \code{eloratings.net} (ELO data)
+        \item \code{bracketmundial2026.com}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3cm}
   \centering
-  4 gr\'aficas por ronda: avance, probabilidades, confianza y scores.
-  Generadas con \code{show\_results.py --4tos --save}.
-  }
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Stacking: Bracket Overview}
-  \centering
-  \includegraphics[width=0.8\textwidth]{data/4tos_bracket_overview.png}\\
-  {\small Pizarra de resultados: cards con TR/SC/AV por partido}
-\end{frame}
-
-% ══════════════════════════════════════════════════════════════════
-\begin{frame}{Resumen y conclusiones}
-  \begin{itemize}
-    \item \textbf{Modelo:} stacking ensemble
-      (RF + XGB + MLP $\to$ LR) con 25 features
-    \item \textbf{Validaci\'on:} split temporal 80/20,
-      \pct{61.89} accuracy, F1 macro 0.59, MCC 0.41
-    \item \textbf{Resultados 16avos:} \pct{69} TR, \pct{73} AV
-    \item \textbf{Resultados 8avos:} \pct{62} TR, \pct{75} AV
-    \item \textbf{Pr\'oximo:} 4 partidos de Semifinales (9--11 jul)
-  \end{itemize}
-
-  \vspace{0.5cm}
-  \textbf{Mejoras futuras:}
-  \begin{itemize}\small
-    \item NLP features con datos hist\'oricos
-    \item Calibraci\'on Platt del meta-modelo
-    \item Incorporar datos de alineaciones/lesiones
-  \end{itemize}
-
-  \vspace{0.5cm}
-  \centering
-  \code{github.com:elable947/predWC.git}
+  \footnotesize ¡Gracias!
 \end{frame}
 
 \end{document}
