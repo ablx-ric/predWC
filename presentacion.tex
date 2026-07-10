@@ -15,32 +15,13 @@
   \newcommand{\flagpair}[2]{#1 -- #2}
 \fi
 
-% ── Tema verde ────────────────────────────────────────────────────
-\usetheme{Ilmenau}
-\setbeamertemplate{frame numbering}[fraction]
-\setbeamercolor{background canvas}{bg=white}
-
-\definecolor{vgreen}{HTML}{1b7a3d}    % verde principal
-\definecolor{vgreenl}{HTML}{239954}   % verde claro
-\definecolor{vgreend}{HTML}{14572b}   % verde oscuro
-\definecolor{rojo}{HTML}{c0392b}
-\definecolor{verde}{HTML}{27ae60}
-\definecolor{gris}{HTML}{95a5a6}
-
-\setbeamercolor{titlelike}{fg=vgreen}
-\setbeamercolor{frametitle}{fg=white, bg=vgreen}
-\setbeamercolor{framesubtitle}{fg=white}
-\setbeamerfont{frametitle}{series=\bfseries}
-\setbeamercolor{section in head/foot}{fg=white, bg=vgreend}
-\setbeamercolor{subsection in head/foot}{fg=white, bg=vgreenl}
-\setbeamercolor{structure}{fg=vgreen}
-\setbeamercolor{alerted text}{fg=rojo}
-\setbeamercolor{palette primary}{fg=white, bg=vgreen}
-\setbeamercolor{palette secondary}{fg=white, bg=vgreenl}
-\setbeamercolor{palette tertiary}{fg=white, bg=vgreend}
-\setbeamercolor{block title}{fg=white, bg=vgreen}
-\setbeamercolor{block body}{fg=black, bg=vgreen!5}
-\setbeamercolor{example text}{fg=vgreen}
+% ── Tema visual ────────────────────────────────────────────────────
+\usetheme{default}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{blocks}[rounded][shadow=true]
+\setbeamertemplate{bibliography item}[text]
+\setbeamercovered{transparent}
 
 % ── Paquetes ──────────────────────────────────────────────────────
 \usepackage[utf8]{inputenc}
@@ -53,16 +34,73 @@
 \usepackage{amsmath, amssymb}
 \usepackage{caption}
 \usepackage{array}
+\usepackage{ragged2e}
+
+% ── Colores y tema ────────────────────────────────────────────────
+\definecolor{vgreen}{HTML}{147A43}
+\definecolor{vgreenl}{HTML}{20A464}
+\definecolor{vgreend}{HTML}{0B4F2A}
+\definecolor{vmint}{HTML}{EAF7EF}
+\definecolor{vcream}{HTML}{F8FBF7}
+\definecolor{vdark}{HTML}{173526}
+\definecolor{rojo}{HTML}{C0392B}
+\definecolor{verde}{HTML}{27AE60}
+\definecolor{gris}{HTML}{6C7A73}
+\definecolor{softgray}{HTML}{EEF2F0}
+
+\setbeamercolor{background canvas}{bg=vcream}
+\setbeamercolor{normal text}{fg=vdark,bg=vcream}
+\setbeamercolor{titlelike}{fg=vgreend}
+\setbeamercolor{frametitle}{fg=white,bg=vgreen}
+\setbeamercolor{framesubtitle}{fg=white}
+\setbeamerfont{frametitle}{series=\bfseries,size=\large}
+\setbeamercolor{structure}{fg=vgreen}
+\setbeamercolor{alerted text}{fg=rojo}
+\setbeamercolor{palette primary}{fg=white,bg=vgreend}
+\setbeamercolor{palette secondary}{fg=white,bg=vgreen}
+\setbeamercolor{palette tertiary}{fg=white,bg=vgreenl}
+\setbeamercolor{block title}{fg=white,bg=vgreen}
+\setbeamercolor{block body}{fg=vdark,bg=white}
+\setbeamercolor{block title example}{fg=white,bg=vgreend}
+\setbeamercolor{block body example}{fg=vdark,bg=vmint}
+\setbeamercolor{example text}{fg=vgreen}
+\setbeamercolor{section in head/foot}{fg=white,bg=vgreend}
+\setbeamercolor{subsection in head/foot}{fg=white,bg=vgreen}
+\setbeamercolor{author in head/foot}{fg=white,bg=vgreend}
+\setbeamercolor{title in head/foot}{fg=white,bg=vgreen}
+\setbeamercolor{date in head/foot}{fg=white,bg=vgreend}
+
+\setbeamertemplate{itemize item}{\raise0.2ex\hbox{\color{vgreen}$\blacktriangleright$}}
+\setbeamertemplate{itemize subitem}{\raise0.15ex\hbox{\color{vgreenl}$\bullet$}}
+\setbeamertemplate{enumerate item}{\colorbox{vgreen}{\color{white}\scriptsize\insertenumlabel}}
+\setbeamertemplate{caption}[numbered]
+\renewcommand{\arraystretch}{1.14}
+
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=0.78cm,dp=0.24cm,leftskip=0.45cm,rightskip=0.35cm]{frametitle}%
+    \usebeamerfont{frametitle}\insertframetitle\hfill{\footnotesize\insertsectionhead}%
+  \end{beamercolorbox}%
+  \vspace{0.12cm}%
+}
+\setbeamertemplate{footline}{%
+  \leavevmode%
+  \hbox{%
+    \begin{beamercolorbox}[wd=.28\paperwidth,ht=2.5ex,dp=1ex,center]{author in head/foot}\insertshortauthor\end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.54\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}\insertshorttitle\end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.18\paperwidth,ht=2.5ex,dp=1ex,center]{date in head/foot}\insertframenumber/\inserttotalframenumber\end{beamercolorbox}%
+  }%
+}
 
 % ── Metadatos ─────────────────────────────────────────────────────
-\title[predWC]{predWC: Predicción de Resultados del Mundial 2026\\ con Stacking Ensemble y Dixon-Coles}
-\author[Nombre]{\textbf{Nombre del Autor}}
+\title[WC2026]{predWC: Predicción de Resultados del Mundial 2026\\ con Stacking Ensemble y Dixon-Coles}
+\author[López Llaja]{\textbf{López Llaja, Abel Ricardo}}
 \institute[UNIV]{
-  Universidad \\
-  Facultad \\
+  Universidad Nacional Toribio Rodriguez de Mendoza de Amazonas \\
+  Facultad de Ingeniería Zootecnista, Biotecnología, Agronegocios y Ciencia de Datos\\
   \medskip
-  \textit{Docente: Nombre del Docente} \\
-  \textit{Curso: Nombre del Curso}
+  \textit{Docente: Mamani Bustamante, Juan Pablo} \\
+  \textit{Curso: Procesamiento del Lenguaje Natural}
 }
 \date{\today}
 
@@ -86,28 +124,29 @@
 
 % ══════════════════════════════════════════════════════════════════
 \begin{frame}[plain]
-  \begin{center}
-    \vspace{0.6cm}
-    {\Huge\bfseries\color{vgreen} predWC}\\[0.15cm]
-    {\large Predicción de Resultados del Mundial 2026\\[0.1cm]
-     con Stacking Ensemble y Dixon-Coles}\\[0.6cm]
-    {\small\code{github.com:elable947/predWC.git}}\\[1.5cm]
-  \end{center}
-  \begin{center}
-    \begin{tabular}{c}
-      \large\textbf{Nombre del Autor} \\
-      \medskip
-      \small Universidad \\
-      \small Facultad \\
-      \medskip
-      \small\textit{Docente: Nombre del Docente} \\
-      \small\textit{Curso: Nombre del Curso}
-    \end{tabular}
-  \end{center}
-  \vfill
-  \begin{center}
-    \footnotesize \today
-  \end{center}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[vgreend] (current page.north west) rectangle ([xshift=0.36\paperwidth]current page.south west);
+    \fill[vgreen] ([xshift=0.36\paperwidth]current page.north west) rectangle ([xshift=0.385\paperwidth]current page.south west);
+    \fill[vcream] ([xshift=0.385\paperwidth]current page.north west) rectangle (current page.south east);
+    \draw[vgreenl, line width=1.2pt] ([xshift=0.43\paperwidth,yshift=-0.9cm]current page.north west) -- ([xshift=-0.75cm,yshift=-0.9cm]current page.north east);
+    \node[anchor=north west, text=white, align=left] at ([xshift=0.7cm,yshift=-0.9cm]current page.north west) {\Large\bfseries WC2026};
+    \node[anchor=south west, text=white, align=left] at ([xshift=0.7cm,yshift=0.9cm]current page.south west) {\footnotesize Procesamiento del\\Lenguaje Natural};
+  \end{tikzpicture}
+
+  \begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=north west, align=left, text width=0.53\paperwidth] at ([xshift=0.42\paperwidth,yshift=-0.95cm]current page.north west) {%
+      {\huge\bfseries\color{vgreend} World Cup FIFA 2026}\\[0.16cm]
+      {\large\color{vdark} Predicción de Resultados del Mundial 2026}\\[0.08cm]
+      {\large\color{gris} mediante Stacking Ensemble}\\[0.55cm]
+      \colorbox{vmint}{\parbox{0.82\linewidth}{\centering\small\code{github.com:elable947/predWC.git}}}\\[0.55cm]
+      {\large\bfseries López Llaja, Abel Ricardo}\\[0.18cm]
+      {\small Universidad Nacional Toribio Rodriguez de Mendoza de Amazonas}\\
+      {\small Facultad de Ingeniería Zootecnista, Biotecnología, Agronegocios y Ciencia de Datos}\\[0.18cm]
+      {\small\textit{Docente: Mamani Bustamante, Juan Pablo}}\\
+      {\small\textit{Curso: Procesamiento del Lenguaje Natural}}\\[0.5cm]
+      {\footnotesize\color{gris}\today}%
+    };
+  \end{tikzpicture}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
@@ -272,14 +311,79 @@
           below=0.5cm of meta] (pred)
           {\large\bfseries Local \;|\; Empate \;|\; Visitante};
 
-    \draw[arrow] (feat) -- (rf);   \draw[arrow] (rf)  -- (prf);
-    \draw[arrow] (feat) -- (xgb);  \draw[arrow] (xgb) -- (pxgb);
-    \draw[arrow] (feat) -- (mlp);  \draw[arrow] (mlp) -- (pmlp);
-    \draw[arrow] (prf)  -| (meta);
-    \draw[arrow] (pxgb) -- (meta);
-    \draw[arrow] (pmlp) -| (meta);
+    \draw[arrow] (feat) -- (rf);
+    \draw[arrow] (feat) -- (xgb);
+    \draw[arrow] (feat) -- (mlp);
+    \draw[arrow] (rf)  -- (prf);
+    \draw[arrow] (xgb) -- (pxgb);
+    \draw[arrow] (mlp) -- (pmlp);
+
+    % Líneas que evitan cruzar pxgb:
+    % Bajan verticalmente hasta la altura de meta.north y luego horizontal
+    \draw[arrow] (prf) -- (prf |- meta.north) -- (meta.north);
+    \draw[arrow] (pxgb) -- (meta.north);
+    \draw[arrow] (pmlp) -- (pmlp |- meta.north) -- (meta.north);
+
     \draw[arrow] (meta) -- (pred);
   \end{tikzpicture}
+\end{frame}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Flujo de datos en el Stacking}
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      box/.style={draw, rounded corners, fill=vgreen!10, align=center,
+                  minimum width=2.6cm, minimum height=0.65cm},
+      dim/.style={draw, rounded corners, fill=orange!10, align=center,
+                  minimum width=1.8cm, minimum height=0.5cm, font=\tiny},
+      arrow/.style={-{Stealth[scale=0.7]}, thick} ]
+
+    \node[box] (feat) {\textbf{25 features} \\ (home/away ELO + stats + contexto)};
+    \node[dim, below=0.25cm of feat] (df) {$(n,\;25)$};
+
+    \node[box, below=0.5cm of df] (sc) {StandardScaler};
+    \node[dim, below=0.25cm of sc] (ds) {$(n,\;25)$};
+
+    \node[box, below left=0.5cm and 0.2cm of ds] (rf2) {RandomForest};
+    \node[box, below=0.5cm of ds] (xgb2) {XGBoost};
+    \node[box, below right=0.5cm and 0.2cm of ds] (mlp2) {MLP};
+
+    \node[dim, below=0.2cm of rf2] (prf2) {$(n,\;3)$};
+    \node[dim, below=0.2cm of xgb2] (pxgb2) {$(n,\;3)$};
+    \node[dim, below=0.2cm of mlp2] (pmlp2) {$(n,\;3)$};
+
+    \draw[arrow] (feat) -- (sc);
+    \draw[arrow] (sc)   -- (ds);
+
+    \draw[arrow] (ds.south) -- ++(0,-0.15) -| (rf2.north);
+    \draw[arrow] (ds.south) -- ++(0,-0.15) -- (xgb2.north);
+    \draw[arrow] (ds.south) -- ++(0,-0.15) -| (mlp2.north);
+
+    \draw[arrow] (rf2) -- (prf2);
+    \draw[arrow] (xgb2) -- (pxgb2);
+    \draw[arrow] (mlp2) -- (pmlp2);
+  \end{tikzpicture}
+
+  \vspace{0.2cm}
+  \textbf{Construcción de meta-features:}
+
+  \[
+  \texttt{meta\_val}[i] = [
+    \underbrace{p_{\text{RF}}(L),\,p_{\text{RF}}(E),\,p_{\text{RF}}(V)}_{3},
+    \underbrace{p_{\text{XGB}}(L),\,p_{\text{XGB}}(E),\,p_{\text{XGB}}(V)}_{3},
+    \underbrace{p_{\text{MLP}}(L),\,p_{\text{MLP}}(E),\,p_{\text{MLP}}(V)}_{3}
+  ]
+  \]
+
+  \centering
+  \begin{minipage}{0.7\linewidth}
+  \begin{block}{Dimensiones del meta-modelo}
+    \centering
+    Sin NLP: $\;(n,\;9)$ \hfill
+    Con NLP: $\;(n,\;33)$
+  \end{block}
+  \end{minipage}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
@@ -292,7 +396,7 @@
     \]
   \end{exampleblock}
 
-  \vspace{0.2cm}
+  \vspace{0.08cm}
   \begin{columns}[T]
     \begin{column}{0.48\textwidth}
       \textbf{Balance de clases}
@@ -397,6 +501,58 @@
   \end{columns}
 \end{frame}
 
+\section{NLP}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{frame}{Integración de NLP}
+
+  \begin{exampleblock}{24 features NLP}
+    \centering
+    {\small
+    \begin{tabular}{ll}
+      \toprule
+      \textbf{Tipo} & \textbf{Features} \\
+      \midrule
+      News PCA (11 comp. $\times$ 2 equipos) & \code{home\_news\_pc1..11}, \code{away\_news\_pc1..11} \\
+      YouTube sentiment ($\times$ 2 equipos)  & \code{home\_yt\_sent}, \code{away\_yt\_sent} \\
+      \bottomrule
+    \end{tabular}
+    }
+  \end{exampleblock}
+
+  \vspace{0.2cm}
+  \textbf{Problema:} las 24 features existen solo para los 32 equipos
+  del Mundial actual, no para los partidos históricos (2018--2024).
+
+  \vspace{0.15cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Estado actual}
+      \begin{itemize}\small
+        \item Training: NLP = \texttt{0.0} en todos los partidos
+        \item Meta-modelo aprende solo de 9 probabilidades base
+        \item Inferencia: valores NLP reales, pero el modelo no sabe usarlos
+        \item Impacto: $\sim$1pp de ruido (no mejora consistente)
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Arquitectura ideal}
+      \begin{itemize}\small
+        \item Generar NLP histórico (scrapear noticias de cada fecha)
+        \item NLP como entrada directa a \alert{todos} los modelos base
+        \item 25 + 24 = 49 features para RF, XGB y MLP
+        \item Meta-modelo recibe 9 probs (sin NLP duplicado)
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \centering
+  {\small\textbf{Actual:}\; \code{meta\_input = [probas(9) | NLP(24)]}
+  \qquad
+  \textbf{Ideal:}\; \code{model\_input = [features(25) | NLP(24)]}}
+\end{frame}
+
 \section{Resultados}
 
 % ══════════════════════════════════════════════════════════════════
@@ -465,6 +621,7 @@
 % ══════════════════════════════════════════════════════════════════
 \begin{frame}{Pronóstico: Semifinales (4tos)}
   \centering
+  {\scriptsize
   \begin{tabular}{lcccc}
     \toprule
     \textbf{Partido} & \textbf{Local} & \textbf{Empate} & \textbf{Visitante} & \textbf{Score ML} \\
@@ -475,10 +632,12 @@
     \pair{Argentina}{Switzerland} & \pct{50.7} & \pct{39.0} & \pct{10.3} & 2-0 (14.3\%) \\
     \bottomrule
   \end{tabular}
+  }
 
-  \vspace{0.3cm}
+  \vspace{0.12cm}
   \begin{block}{Goles esperados (Dixon-Coles)}
     \centering
+    {\scriptsize
     \begin{tabular}{lcc}
       \toprule
       \textbf{Partido} & $\lambda$ local & $\lambda$ visit. \\
@@ -489,9 +648,10 @@
       \pair{Argentina}{Switzerland} & 2.09 & 0.64 \\
       \bottomrule
     \end{tabular}
+    }
   \end{block}
 
-  \vspace{0.15cm}
+  \vspace{0.05cm}
   Partidos a jugarse el 9--11 de julio de 2026.
 \end{frame}
 
@@ -526,7 +686,7 @@
     \end{column}
     \begin{column}{0.48\textwidth}
       \textbf{Ejemplo de salida:}
-      {\scriptsize\ttfamily
+      {\tiny\ttfamily
       \begin{tabular}{@{}l@{}}
       Germany vs Paraguay\quad TR Germany(44\%) $\to$ Empate [x]\\
       \phantom{Germany vs Paraguay}\quad SC 1-0 $\to$ 1-1 [x]\\
@@ -542,17 +702,17 @@
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_advancement.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_advancement.png}\\
       {\tiny Avance a Semifinales}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_confidence.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_confidence.png}\\
       {\tiny Confianza del modelo}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_poisson_scores.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_poisson_scores.png}\\
       {\tiny Dixon-Coles scores}
     \end{column}
   \end{columns}
@@ -561,17 +721,17 @@
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_probabilities.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_probabilities.png}\\
       {\tiny Probabilidades L/E/V}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_bracket_overview.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_bracket_overview.png}\\
       {\tiny Pizarra de resultados}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{4tos_accuracy_summary.png}\\
+      \safeincludegraphics[width=\textwidth,height=0.23\textheight,keepaspectratio]{4tos_accuracy_summary.png}\\
       {\tiny Resumen de aciertos}
     \end{column}
   \end{columns}
