@@ -28,6 +28,11 @@
 \definecolor{gris}{HTML}{95a5a6}
 
 \setbeamercolor{titlelike}{fg=vgreen}
+\setbeamercolor{frametitle}{fg=white, bg=vgreen}
+\setbeamercolor{framesubtitle}{fg=white}
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamercolor{section in head/foot}{fg=white, bg=vgreend}
+\setbeamercolor{subsection in head/foot}{fg=white, bg=vgreenl}
 \setbeamercolor{structure}{fg=vgreen}
 \setbeamercolor{alerted text}{fg=rojo}
 \setbeamercolor{palette primary}{fg=white, bg=vgreen}
@@ -49,6 +54,18 @@
 \usepackage{caption}
 \usepackage{array}
 
+% ── Metadatos ─────────────────────────────────────────────────────
+\title[predWC]{predWC: Predicción de Resultados del Mundial 2026\\ con Stacking Ensemble y Dixon-Coles}
+\author[Nombre]{\textbf{Nombre del Autor}}
+\institute[UNIV]{
+  Universidad \\
+  Facultad \\
+  \medskip
+  \textit{Docente: Nombre del Docente} \\
+  \textit{Curso: Nombre del Curso}
+}
+\date{\today}
+
 % ── Macros ────────────────────────────────────────────────────────
 \newcommand{\pct}[1]{\textbf{#1\%}}
 \newcommand{\cmark}{\textcolor{verde}{\ensuremath{\checkmark}}}
@@ -59,7 +76,7 @@
 
 \newcommand{\safeincludegraphics}[2][]{%
   \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
-    \fbox{\parbox[c][0.4\textheight][c]{0.85\linewidth}{\centering\scriptsize
+    \fbox{\parbox[c][0.27\textheight][c]{0.82\linewidth}{\centering\tiny
       Gráfica no disponible\\\detokenize{#2}}}%
   }%
 }
@@ -69,19 +86,28 @@
 
 % ══════════════════════════════════════════════════════════════════
 \begin{frame}[plain]
-  \centering
+  \begin{center}
+    \vspace{0.6cm}
+    {\Huge\bfseries\color{vgreen} predWC}\\[0.15cm]
+    {\large Predicción de Resultados del Mundial 2026\\[0.1cm]
+     con Stacking Ensemble y Dixon-Coles}\\[0.6cm]
+    {\small\code{github.com:elable947/predWC.git}}\\[1.5cm]
+  \end{center}
+  \begin{center}
+    \begin{tabular}{c}
+      \large\textbf{Nombre del Autor} \\
+      \medskip
+      \small Universidad \\
+      \small Facultad \\
+      \medskip
+      \small\textit{Docente: Nombre del Docente} \\
+      \small\textit{Curso: Nombre del Curso}
+    \end{tabular}
+  \end{center}
   \vfill
-  {\Huge\bfseries\color{vgreen} predWC}\\[0.2cm]
-  {\large Predicción de Resultados del Mundial 2026\\[0.15cm]
-   con Stacking Ensemble y Dixon-Coles}\\[0.8cm]
-  {\small
-   \begin{tabular}{c}
-     \code{uv run stacking\_model.py --4tos} \\[0.2cm]
-     \code{github.com:elable947/predWC.git}
-   \end{tabular}
-  }\\[1.2cm]
-  {\footnotesize \today}
-  \vfill
+  \begin{center}
+    \footnotesize \today
+  \end{center}
 \end{frame}
 
 % ══════════════════════════════════════════════════════════════════
@@ -376,8 +402,8 @@
 % ══════════════════════════════════════════════════════════════════
 \begin{frame}{Octavos de Final (16avos)}
   \centering
-  {\fontsize{5.5}{7}\selectfont
-  \begin{tabular}{lcccc}
+  {\tiny
+  \begin{tabular}{lccc}
     \toprule
     \textbf{Partido} & \textbf{TR} & \textbf{Score} & \textbf{AV} \\
     \midrule
@@ -407,8 +433,8 @@
 % ══════════════════════════════════════════════════════════════════
 \begin{frame}{Cuartos de Final (8avos)}
   \centering
-  {\fontsize{6}{7.5}\selectfont
-  \begin{tabular}{lcccc}
+  {\scriptsize
+  \begin{tabular}{lccc}
     \toprule
     \textbf{Partido} & \textbf{TR} & \textbf{Score} & \textbf{AV} \\
     \midrule
@@ -455,7 +481,7 @@
     \centering
     \begin{tabular}{lcc}
       \toprule
-      \textbf{Partido} & \textbf{$\boldsymbol{\lambda}$ local} & \textbf{$\boldsymbol{\lambda}$ visit.} \\
+      \textbf{Partido} & $\lambda$ local & $\lambda$ visit. \\
       \midrule
       \pair{France}{Morocco}   & 2.06 & 0.67 \\
       \pair{Spain}{Belgium}    & 2.29 & 0.44 \\
@@ -472,7 +498,7 @@
 \section{Tracker y Visualización}
 
 % ══════════════════════════════════════════════════════════════════
-\begin{frame}{Tracker en vivo: \code{bracket\_tracker.py}}
+\begin{frame}{Tracker en vivo: bracket\_tracker.py}
   \centering
   \textbf{Métricas duales por partido:}
   \vspace{0.15cm}
@@ -500,12 +526,12 @@
     \end{column}
     \begin{column}{0.48\textwidth}
       \textbf{Ejemplo de salida:}
-      {\fontsize{4.5}{6}\selectfont
-      \begin{verbatim}
-Germany vs Paraguay   TR Germany(44%)→Empate [x]
-                      SC 1-0→1-1             [x]
-                      AV Germany(77%)→Paraguay [x]
-      \end{verbatim}
+      {\scriptsize\ttfamily
+      \begin{tabular}{@{}l@{}}
+      Germany vs Paraguay\quad TR Germany(44\%) $\to$ Empate [x]\\
+      \phantom{Germany vs Paraguay}\quad SC 1-0 $\to$ 1-1 [x]\\
+      \phantom{Germany vs Paraguay}\quad AV Germany(77\%) $\to$ Paraguay [x]
+      \end{tabular}
       }
     \end{column}
   \end{columns}
@@ -516,17 +542,17 @@ Germany vs Paraguay   TR Germany(44%)→Empate [x]
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_advancement.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_advancement.png}\\
       {\tiny Avance a Semifinales}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_confidence.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_confidence.png}\\
       {\tiny Confianza del modelo}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_poisson_scores.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_poisson_scores.png}\\
       {\tiny Dixon-Coles scores}
     \end{column}
   \end{columns}
@@ -535,17 +561,17 @@ Germany vs Paraguay   TR Germany(44%)→Empate [x]
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_probabilities.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_probabilities.png}\\
       {\tiny Probabilidades L/E/V}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_bracket_overview.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_bracket_overview.png}\\
       {\tiny Pizarra de resultados}
     \end{column}
     \begin{column}{0.33\textwidth}
       \centering
-      \safeincludegraphics[width=\textwidth]{data/4tos_accuracy_summary.png}\\
+      \safeincludegraphics[width=\textwidth]{4tos_accuracy_summary.png}\\
       {\tiny Resumen de aciertos}
     \end{column}
   \end{columns}
